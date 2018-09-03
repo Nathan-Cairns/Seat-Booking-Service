@@ -7,8 +7,8 @@ import java.util.Set;
 
 @ApplicationPath("/services")
 public class ConcertApplication extends Application {
-    private Set<Class<?>> _classes = new HashSet<>();
-    private Set<Object> _singletons = new HashSet<>();
+    private Set<Class<?>> _classes;
+    private Set<Object> _singletons;
 
     public ConcertApplication() {
         super();

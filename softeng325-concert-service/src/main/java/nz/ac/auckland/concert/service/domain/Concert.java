@@ -1,28 +1,43 @@
 package nz.ac.auckland.concert.service.domain;
 
 import nz.ac.auckland.concert.common.types.PriceBand;
+import nz.ac.auckland.concert.service.domain.jpa.LocalDateTimeConverter;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import javax.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 @Entity
+@Table(name="CONCERTS")
 public class Concert {
 
+    @Column(name = "ID")
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
+    @Column(name="TITLE")
     private String title;
+
+    @CollectionTable(name = "CONCERT_DATES")
+    @ElementCollection
+    @Convert(converter=LocalDateTimeConverter.class)
     private Set<LocalDateTime> dates;
+
+    @ManyToMany
+    @JoinTable(name = "CONCERT_PERFORMER", joinColumns = @JoinColumn(name="concert_id"),
+            inverseJoinColumns = @JoinColumn(name="performer_id"))
     private Set<Performer> performers;
 
+    @CollectionTable(name = "CONCERT_TARIFS")
+    @ElementCollection
+    @MapKeyColumn(name="price_band")
     private Map<PriceBand, BigDecimal> tariff;
-    private Set<Long> performerIds;
+
+    public Concert(){}
 
     public long getId() {
         return id;
@@ -61,10 +76,10 @@ public class Concert {
     }
 
     public Set<Long> getPerformerIds() {
+        Set<Long> performerIds = new HashSet<>();
+        for (Performer performer : performers) {
+            performerIds.add(performer.getId());
+        }
         return performerIds;
-    }
-
-    public void setPerformerIds(Set<Long> performerIds) {
-        this.performerIds = performerIds;
     }
 }

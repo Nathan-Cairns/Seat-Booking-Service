@@ -1,14 +1,12 @@
 package nz.ac.auckland.concert.service.domain;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import javax.persistence.*;
 
 @Entity
 public class User {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
     private String username;
@@ -16,7 +14,10 @@ public class User {
     private String firstName;
     private String lastName;
 
+    @OneToOne
     private CreditCard creditCard;
+
+    public User(){}
 
     public User(String username, String password, String firstName, String lastName) {
         this.username = username;

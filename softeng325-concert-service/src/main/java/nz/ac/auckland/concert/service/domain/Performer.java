@@ -2,23 +2,33 @@ package nz.ac.auckland.concert.service.domain;
 
 import nz.ac.auckland.concert.common.types.Genre;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import javax.persistence.*;
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
+@Table(name="PERFORMERS")
 public class Performer {
 
+    @Column(name="ID")
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
+    @Column(name = "GENRE")
+    @Enumerated(EnumType.STRING)
     private Genre genre;
+
+    @Column(name="IMAGE_NAME")
     private String imageName;
+
+    @Column(name="NAME")
     private String name;
 
-    private Set<Long> concertIds;
+    @ManyToMany(mappedBy = "performers")
+    private Set<Concert> concerts;
+
+    public Performer() {}
 
     public long getId() {
         return id;
@@ -48,11 +58,17 @@ public class Performer {
         this.name = name;
     }
 
-    public Set<Long> getConcertIds() {
-        return concertIds;
+    public Set<Concert> getConcerts() {
+        return concerts;
     }
 
-    public void setConcertIds(Set<Long> concertIds) {
-        this.concertIds = concertIds;
+    public Set<Long> getConcertIds() {
+        Set<Long> ids = new HashSet<>();
+
+        for (Concert concert : concerts) {
+            ids.add(concert.getId());
+        }
+
+        return ids;
     }
 }
