@@ -1,8 +1,9 @@
-package nz.ac.auckland.concert.service.services;
+package nz.ac.auckland.concert.service.services.resources;
 
 import nz.ac.auckland.concert.common.dto.UserDTO;
 import nz.ac.auckland.concert.common.message.Messages;
 import nz.ac.auckland.concert.service.domain.User;
+import nz.ac.auckland.concert.service.services.PersistenceManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,6 +12,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.net.URI;
+import java.util.List;
 
 @Path("/users")
 public class UserResource {
@@ -69,7 +71,14 @@ public class UserResource {
 
             EntityManager em = _persistenceManager.createEntityManager();
 
+            List<User> users = em.createQuery("SELECT u from User u", User.class).getResultList();
+
+            for (User user : users) {
+                _logger.debug(user.getUsername());
+            }
+
             if (em.find(User.class, userDTO.getUsername()) != null) {
+                _logger.debug("User already exists");
                 return Response.status(Response.Status.CONFLICT)
                         .entity(Messages.CREATE_USER_WITH_NON_UNIQUE_NAME)
                         .build();

@@ -38,33 +38,50 @@ public class DefaultService implements ConcertService {
     public Set<ConcertDTO> getConcerts() throws ServiceException {
         Response response = null;
 
-        Builder builder = _client.target(CONCERT_SERVICE).request()
-                .accept(MediaType.APPLICATION_XML);
+        try {
+            Builder builder = _client.target(CONCERT_SERVICE).request()
+                    .accept(MediaType.APPLICATION_XML);
 
-        _logger.debug("Making concerts get request...");
-        response = builder.get();
+            _logger.debug("Making concerts get request...");
+            response = builder.get();
 
-        Set<ConcertDTO> concertDTOS = response.readEntity(new GenericType<Set<ConcertDTO>>() {});
+            Set<ConcertDTO> concertDTOS = response.readEntity(new GenericType<Set<ConcertDTO>>() {
+            });
 
-        _logger.debug("Successfully retrieved and unmarshalled concerts from server.");
-        return concertDTOS;
+            _logger.debug("Successfully retrieved and unmarshalled concerts from server.");
+            response.close();
+            return concertDTOS;
+        } catch (Exception e) {
+            throw new ServiceException(Messages.SERVICE_COMMUNICATION_ERROR);
+        } finally {
+            assert response != null;
+            response.close();
+        }
     }
 
     @Override
     public Set<PerformerDTO> getPerformers() throws ServiceException {
         Response response = null;
 
-        Builder builder = _client.target(PERFORMER_SERVICE).request()
-                .accept(MediaType.APPLICATION_XML);
+        try {
+            Builder builder = _client.target(PERFORMER_SERVICE).request()
+                    .accept(MediaType.APPLICATION_XML);
 
-        _logger.debug("Making performers get request...");
-        response = builder.get();
+            _logger.debug("Making performers get request...");
+            response = builder.get();
 
-        Set<PerformerDTO> performerDTOList = response.readEntity(new GenericType<Set<PerformerDTO>>(){});
+            Set<PerformerDTO> performerDTOList = response.readEntity(new GenericType<Set<PerformerDTO>>() {
+            });
 
-        _logger.debug("Successfully retrieved and unmarshalled performers from server.");
-        response.close();
-        return performerDTOList;
+            _logger.debug("Successfully retrieved and unmarshalled performers from server.");
+            response.close();
+            return performerDTOList;
+        } catch (Exception e) {
+            throw new ServiceException(Messages.SERVICE_COMMUNICATION_ERROR);
+        } finally {
+            assert response != null;
+            response.close();
+        }
     }
 
     @Override
@@ -75,9 +92,15 @@ public class DefaultService implements ConcertService {
                     .accept(MediaType.APPLICATION_XML);
 
             _logger.debug("Making create user request");
-            response = builder.post(Entity.entity(newUser, MediaType.APPLICATION_XML));
+
+            try {
+                response = builder.post(Entity.entity(newUser, MediaType.APPLICATION_XML));
+            } catch (Exception e) {
+                throw new ServiceException(Messages.SERVICE_COMMUNICATION_ERROR);
+            }
 
             if (response.getStatus() != Response.Status.CREATED.getStatusCode()) {
+                _logger.debug(String.valueOf(response.getStatus()));
                 throw new ServiceException(response.readEntity(String.class));
             }
 
@@ -85,9 +108,8 @@ public class DefaultService implements ConcertService {
             response.close();
             return new UserDTO(newUser.getUsername(), newUser.getPassword(),
                     newUser.getLastname(), newUser.getFirstname());
-        } catch (Exception e) {
-            throw new ServiceException(Messages.SERVICE_COMMUNICATION_ERROR);
         } finally {
+            assert response != null;
             response.close();
         }
     }
