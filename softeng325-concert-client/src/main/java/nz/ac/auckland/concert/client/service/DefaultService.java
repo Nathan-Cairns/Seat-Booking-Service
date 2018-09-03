@@ -2,7 +2,6 @@ package nz.ac.auckland.concert.client.service;
 
 import nz.ac.auckland.concert.common.dto.*;
 import nz.ac.auckland.concert.common.message.Messages;
-import nz.ac.auckland.concert.service.domain.Performer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
