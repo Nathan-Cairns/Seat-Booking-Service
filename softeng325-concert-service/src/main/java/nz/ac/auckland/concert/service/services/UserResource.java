@@ -1,5 +1,6 @@
 package nz.ac.auckland.concert.service.services;
 
+import nz.ac.auckland.concert.common.dto.UserDTO;
 import nz.ac.auckland.concert.service.domain.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,14 +38,20 @@ public class UserResource {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
 
+        UserDTO userDTO = new UserDTO(user.getUsername(), user.getPassword(), user.getLastName(), user.getFirstName());
+
         _logger.debug("Retrieved user with id: " + id);
-        return Response.ok(user).build();
+        return Response.ok(userDTO).build();
     }
 
     @POST
     @Consumes(MediaType.APPLICATION_XML)
-    public Response postUser(User user){
-        _logger.debug("Creating new user with id: " + user.getId());
+    public Response postUser(UserDTO userDTO){
+        _logger.debug("Creating user: " + userDTO.getUsername());
+
+        User user = new User(userDTO.getUsername(), userDTO.getPassword(), userDTO.getFirstname(), userDTO.getLastname());
+
+        _logger.debug("with id: " + user.getId());
 
         EntityManager em = _persistenceManager.createEntityManager();
 

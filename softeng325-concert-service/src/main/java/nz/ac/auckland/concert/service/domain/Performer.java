@@ -5,6 +5,7 @@ import nz.ac.auckland.concert.common.types.Genre;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import java.util.Set;
 
 @Entity
 public class Performer {
@@ -16,6 +17,8 @@ public class Performer {
     private Genre genre;
     private String imageName;
     private String name;
+
+    private Set<Long> concertIds;
 
     public long getId() {
         return id;
@@ -43,5 +46,13 @@ public class Performer {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public Set<Long> getConcertIds() {
+        return concertIds;
+    }
+
+    public void setConcertIds(Set<Long> concertIds) {
+        this.concertIds = concertIds;
     }
 }

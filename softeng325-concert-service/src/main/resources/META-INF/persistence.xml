@@ -23,6 +23,7 @@
 	     
 	<persistence-unit name="nz.ac.auckland.concert">
 		<!-- Specify each class to map using a class element -->
+		<exclude-unlisted-classes>false</exclude-unlisted-classes>
 
 		<properties>
 			<!--  Configure the data source. In this case the embedded H2 database

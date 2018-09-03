@@ -1,5 +1,6 @@
 package nz.ac.auckland.concert.service.services;
 
+import nz.ac.auckland.concert.common.dto.ConcertDTO;
 import nz.ac.auckland.concert.service.domain.Concert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,8 +64,11 @@ public class ConcertResource {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
 
+        ConcertDTO concertDTO = new ConcertDTO(concert.getId(), concert.getTitle(), concert.getDates(),
+                concert.getTariff(), concert.getPerformerIds());
+
         _logger.debug("Successfully found concert with id: " + id);
-        return Response.status(Response.Status.OK).entity(concert).build();
+        return Response.status(Response.Status.OK).entity(concertDTO).build();
     }
 
 }

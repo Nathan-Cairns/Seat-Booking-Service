@@ -1,5 +1,7 @@
 package nz.ac.auckland.concert.service.services;
 
+import nz.ac.auckland.concert.common.dto.PerformerDTO;
+import nz.ac.auckland.concert.common.types.Genre;
 import nz.ac.auckland.concert.service.domain.Performer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,7 +14,9 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Path("/performers")
 @NamedQuery(name="Performers.findAll", query="SELECT p FROM PERFORMERS p")
@@ -42,8 +46,14 @@ public class PerformerResource {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
 
+        List<PerformerDTO> performerDTOs;
+
+        performerDTOs = performers.stream().map(performer -> new PerformerDTO(performer.getId(),
+                performer.getName(), performer.getImageName(), performer.getGenre(),
+                performer.getConcertIds())).collect(Collectors.toList());
+
         _logger.debug("Successfully retrieved performers");
-        return Response.ok(performers).build();
+        return Response.ok(performerDTOs).build();
     }
 
     @GET
@@ -63,7 +73,10 @@ public class PerformerResource {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
 
+        PerformerDTO performerDTO = new PerformerDTO(performer.getId(), performer.getName(), performer.getImageName(),
+                performer.getGenre(), performer.getConcertIds());
+
         _logger.debug("Retrieved performer with id: " + id);
-        return Response.ok(performer).build();
+        return Response.ok(performerDTO).build();
     }
 }
