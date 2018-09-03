@@ -59,9 +59,11 @@ public class PerformerResource {
         Performer performer = em.find(Performer.class, id);
 
         if (performer == null) {
+            _logger.debug("Could not find performer with id " + id);
             return Response.status(Response.Status.NOT_FOUND).build();
         }
 
+        _logger.debug("Retrieved performer with id: " + id);
         return Response.ok(performer).build();
     }
 }
