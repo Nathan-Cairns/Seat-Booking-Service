@@ -9,9 +9,7 @@ import nz.ac.auckland.concert.common.types.Genre;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.*;
 
 /**
  * DTO class to represent performers. 
@@ -29,11 +27,19 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement(name="performer")
 public class PerformerDTO {
 
+    @XmlAttribute(name = "id")
 	private Long _id;
+
+    @XmlElement(name = "name")
 	private String _name;
+
+    @XmlElement(name = "image_name")
 	private String _imageName;
+
+    @XmlElement(name = "genre")
 	private Genre _genre;
-	
+
+    @XmlElement(name = "concert_ids")
 	private Set<Long> _concertIds;
 	
 	public PerformerDTO() {}

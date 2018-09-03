@@ -5,10 +5,14 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import nz.ac.auckland.concert.common.jaxb.LocalDateTimeAdapter;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import nz.ac.auckland.concert.common.types.PriceBand;
+
+import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 /**
  * DTO class to represent bookings (confirmed reservations). 
@@ -24,12 +28,24 @@ import nz.ac.auckland.concert.common.types.PriceBand;
  *                 same price band).
  *
  */
+@XmlRootElement(name = "booking")
+@XmlAccessorType(XmlAccessType.FIELD)
 public class BookingDTO {
 
+	@XmlAttribute(name = "id")
 	private Long _concertId;
+
+	@XmlElement(name = "concert_title")
 	private String _concertTitle;
+
+	@XmlElement(name = "date")
+	@XmlJavaTypeAdapter(LocalDateTimeAdapter.class)
 	private LocalDateTime _dateTime;
+
+	@XmlElement(name = "seats")
 	private Set<SeatDTO> _seats;
+
+	@XmlElement(name = "price_band")
 	private PriceBand _priceBand;
 
 	public BookingDTO() {
