@@ -1,6 +1,7 @@
 package nz.ac.auckland.concert.service.services;
 
 import nz.ac.auckland.concert.common.dto.UserDTO;
+import nz.ac.auckland.concert.common.message.Messages;
 import nz.ac.auckland.concert.service.domain.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,43 +26,68 @@ public class UserResource {
     @GET
     @Produces(MediaType.APPLICATION_XML)
     public Response getUser(@PathParam("id") long id) {
-        _logger.debug("Retrieving user with id " + id);
+        try {
+            _logger.debug("Retrieving user with id " + id);
 
-        EntityManager em = _persistenceManager.createEntityManager();
+            EntityManager em = _persistenceManager.createEntityManager();
 
-        em.getTransaction().begin();
+            em.getTransaction().begin();
 
-        User user = em.find(User.class, id);
+            User user = em.find(User.class, id);
 
-        if (user == null) {
-            _logger.debug("Could not find user with id: " + id);
-            return Response.status(Response.Status.NOT_FOUND).build();
+            if (user == null) {
+                _logger.debug("Could not find user with id: " + id);
+                return Response.status(Response.Status.NOT_FOUND).build();
+            }
+
+            UserDTO userDTO = new UserDTO(user.getUsername(), user.getPassword(), user.getLastName(), user.getFirstName());
+
+            _logger.debug("Retrieved user with id: " + id);
+            return Response.ok(userDTO).build();
+        } catch (Exception e) {
+            return Response.serverError().build();
         }
-
-        UserDTO userDTO = new UserDTO(user.getUsername(), user.getPassword(), user.getLastName(), user.getFirstName());
-
-        _logger.debug("Retrieved user with id: " + id);
-        return Response.ok(userDTO).build();
     }
 
     @POST
     @Consumes(MediaType.APPLICATION_XML)
     public Response postUser(UserDTO userDTO){
-        _logger.debug("Creating user: " + userDTO.getUsername());
+        try {
+            _logger.debug("Creating user: " + userDTO.getUsername());
 
-        User user = new User(userDTO.getUsername(), userDTO.getPassword(), userDTO.getFirstname(), userDTO.getLastname());
+            String u = userDTO.getUsername();
+            String p = userDTO.getPassword();
+            String fn = userDTO.getFirstname();
+            String ln = userDTO.getLastname();
 
-        _logger.debug("with id: " + user.getId());
+            if (u == null || u.equals("") || p == null || p.equals("")
+                    || fn == null || fn.equals("") || ln == null || ln.equals("")) {
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity(Messages.CREATE_USER_WITH_MISSING_FIELDS)
+                        .build();
+            }
 
-        EntityManager em = _persistenceManager.createEntityManager();
+            EntityManager em = _persistenceManager.createEntityManager();
 
-        em.getTransaction().begin();
+            if (em.find(User.class, userDTO.getUsername()) != null) {
+                return Response.status(Response.Status.CONFLICT)
+                        .entity(Messages.CREATE_USER_WITH_NON_UNIQUE_NAME)
+                        .build();
+            }
 
-        em.persist(user);
+            User user = new User(userDTO.getUsername(), userDTO.getPassword(),
+                    userDTO.getFirstname(), userDTO.getLastname());
 
-        em.getTransaction().commit();
+            em.getTransaction().begin();
 
-        _logger.debug("Created user with id: " + user.getId());
-        return Response.created(URI.create("/users/" + user.getId())).build();
+            em.persist(user);
+
+            em.getTransaction().commit();
+
+            _logger.debug("Created user with id: " + user.getUsername());
+            return Response.created(URI.create("/users/" + user.getUsername())).build();
+        } catch (Exception e) {
+            return Response.serverError().build();
+        }
     }
 }

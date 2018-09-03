@@ -1,6 +1,7 @@
 package nz.ac.auckland.concert.client.service;
 
 import nz.ac.auckland.concert.common.dto.*;
+import nz.ac.auckland.concert.common.message.Messages;
 import nz.ac.auckland.concert.service.domain.Performer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,19 +63,33 @@ public class DefaultService implements ConcertService {
         Set<PerformerDTO> performerDTOList = response.readEntity(new GenericType<Set<PerformerDTO>>(){});
 
         _logger.debug("Successfully retrieved and unmarshalled performers from server.");
+        response.close();
         return performerDTOList;
     }
 
     @Override
     public UserDTO createUser(UserDTO newUser) throws ServiceException {
         Response response = null;
+        try {
+            Builder builder = _client.target(USER_SERVICE).request()
+                    .accept(MediaType.APPLICATION_XML);
 
-        Builder builder = _client.target(USER_SERVICE).request()
-                .accept(MediaType.APPLICATION_XML);
+            _logger.debug("Making create user request");
+            response = builder.post(Entity.entity(newUser, MediaType.APPLICATION_XML));
 
-        response = builder.post(Entity.entity(newUser, MediaType.APPLICATION_XML));
+            if (response.getStatus() != Response.Status.CREATED.getStatusCode()) {
+                throw new ServiceException(response.readEntity(String.class));
+            }
 
-        return newUser;
+            _logger.debug("User Successfully created at url: " + response.getLocation());
+            response.close();
+            return new UserDTO(newUser.getUsername(), newUser.getPassword(),
+                    newUser.getLastname(), newUser.getFirstname());
+        } catch (Exception e) {
+            throw new ServiceException(Messages.SERVICE_COMMUNICATION_ERROR);
+        } finally {
+            response.close();
+        }
     }
 
     @Override

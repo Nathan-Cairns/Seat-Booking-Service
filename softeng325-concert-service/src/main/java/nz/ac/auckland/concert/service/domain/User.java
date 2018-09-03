@@ -3,15 +3,20 @@ package nz.ac.auckland.concert.service.domain;
 import javax.persistence.*;
 
 @Entity
+@Table(name="USER")
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
-
+    @Column(name="USERNAME", nullable = false, unique = true)
     private String username;
+
+    @Column(name="PASSWORD", nullable = false)
     private String password;
+
+    @Column(name="FIRST_NAME", nullable = false)
     private String firstName;
+
+    @Column(name="LAST_NAME", nullable = false)
     private String lastName;
 
     @OneToOne
@@ -24,10 +29,6 @@ public class User {
         this.password = password;
         this.firstName = firstName;
         this.lastName = lastName;
-    }
-
-    public long getId() {
-        return id;
     }
 
     public CreditCard getCreditCard() {
