@@ -9,6 +9,10 @@ import nz.ac.auckland.concert.common.types.Genre;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
+
 /**
  * DTO class to represent performers. 
  * 
@@ -21,6 +25,8 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
  *             playing. 
  *             
  */
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlRootElement(name="performer")
 public class PerformerDTO {
 
 	private Long _id;

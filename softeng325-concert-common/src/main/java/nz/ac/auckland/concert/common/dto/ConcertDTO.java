@@ -13,6 +13,8 @@ import nz.ac.auckland.concert.common.types.PriceBand;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import javax.xml.bind.annotation.*;
+
 /**
  * DTO class to represent concerts. 
  * 
@@ -27,10 +29,13 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
  *               (represented as a set of performer identifiers).
  *
  */
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlRootElement(name="concert")
 public class ConcertDTO {
 
 	private Long _id;
 	private String _title;
+
 	private Set<LocalDateTime> _dates;
 	private Map<PriceBand, BigDecimal> _tariff;
 	private Set<Long> _performerIds;

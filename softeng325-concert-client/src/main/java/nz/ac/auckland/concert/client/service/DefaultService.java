@@ -1,6 +1,7 @@
 package nz.ac.auckland.concert.client.service;
 
 import nz.ac.auckland.concert.common.dto.*;
+import nz.ac.auckland.concert.service.domain.Performer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,10 +40,12 @@ public class DefaultService implements ConcertService {
         Builder builder = _client.target(CONCERT_SERVICE).request()
                 .accept(MediaType.APPLICATION_XML);
 
+        _logger.debug("Making concerts get request...");
         response = builder.get();
 
         Set<ConcertDTO> concertDTOS = response.readEntity(new GenericType<Set<ConcertDTO>>() {});
 
+        _logger.debug("Successfully retrieved and unmarshalled concerts from server.");
         return concertDTOS;
     }
 
@@ -53,9 +56,13 @@ public class DefaultService implements ConcertService {
         Builder builder = _client.target(PERFORMER_SERVICE).request()
                 .accept(MediaType.APPLICATION_XML);
 
+        _logger.debug("Making performers get request...");
         response = builder.get();
 
-        return null;
+        Set<PerformerDTO> performerDTOList = response.readEntity(new GenericType<Set<PerformerDTO>>(){});
+
+        _logger.debug("Successfully retrieved and unmarshalled performers from server.");
+        return performerDTOList;
     }
 
     @Override

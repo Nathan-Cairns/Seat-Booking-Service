@@ -6,17 +6,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.persistence.EntityManager;
-import javax.persistence.NamedQuery;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Path("/concerts")
-@NamedQuery(name="Concerts.findAll", query="SELECT c FROM CONCERTS c")
 public class ConcertResource {
 
     private PersistenceManager _persistenceManager;
@@ -37,15 +38,16 @@ public class ConcertResource {
 
         em.getTransaction().begin();
 
-        List<Concert> concerts = em.createNamedQuery("Concerts.findAll", Concert.class).getResultList();
+        List<Concert> concerts = em.createQuery("SELECT c FROM Concert c", Concert.class).getResultList();
 
-        if (concerts == null || concerts.isEmpty()) {
-            _logger.debug("No concerts were found");
-            return Response.status(Response.Status.NOT_FOUND).build();
-        }
+        List<ConcertDTO> concertDTOS = concerts.stream().map(concert -> new ConcertDTO(concert.getId(),
+                concert.getTitle(), concert.getDates(), concert.getTariff(),
+                concert.getPerformerIds())).collect(Collectors.toList());
+
+        GenericEntity<List<ConcertDTO>> entity = new GenericEntity<List<ConcertDTO>>(concertDTOS) {};
 
         _logger.debug("Successfully retrieved all concerts");
-        return Response.status(Response.Status.OK).entity(concerts).build();
+        return Response.ok(entity).build();
     }
 
     @GET
@@ -68,7 +70,7 @@ public class ConcertResource {
                 concert.getTariff(), concert.getPerformerIds());
 
         _logger.debug("Successfully found concert with id: " + id);
-        return Response.status(Response.Status.OK).entity(concertDTO).build();
+        return Response.ok(concertDTO).build();
     }
 
 }

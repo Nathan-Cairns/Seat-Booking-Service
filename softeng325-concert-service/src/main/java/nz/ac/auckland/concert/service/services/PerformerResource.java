@@ -1,24 +1,22 @@
 package nz.ac.auckland.concert.service.services;
 
 import nz.ac.auckland.concert.common.dto.PerformerDTO;
-import nz.ac.auckland.concert.common.types.Genre;
 import nz.ac.auckland.concert.service.domain.Performer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.persistence.EntityManager;
-import javax.persistence.NamedQuery;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Path("/performers")
-@NamedQuery(name="Performers.findAll", query="SELECT p FROM PERFORMERS p")
 public class PerformerResource {
     private PersistenceManager _persistenceManager;
 
@@ -38,12 +36,7 @@ public class PerformerResource {
 
         em.getTransaction().begin();
 
-        List<Performer> performers = em.createNamedQuery("Performers.findAll", Performer.class).getResultList();
-
-        if (performers == null || performers.isEmpty()) {
-            _logger.debug("No performers were found");
-            return Response.status(Response.Status.NOT_FOUND).build();
-        }
+        List<Performer> performers = em.createQuery("SELECT p FROM Performer p", Performer.class).getResultList();
 
         List<PerformerDTO> performerDTOs;
 
@@ -51,8 +44,10 @@ public class PerformerResource {
                 performer.getName(), performer.getImageName(), performer.getGenre(),
                 performer.getConcertIds())).collect(Collectors.toList());
 
+        GenericEntity<List<PerformerDTO>> entity = new GenericEntity<List<PerformerDTO>>(performerDTOs) {};
+
         _logger.debug("Successfully retrieved performers");
-        return Response.ok(performerDTOs).build();
+        return Response.ok(entity).build();
     }
 
     @GET
