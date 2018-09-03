@@ -34,7 +34,8 @@ public class Concert {
 
     @CollectionTable(name = "CONCERT_TARIFS")
     @ElementCollection
-    @MapKeyColumn(name="price_band")
+    @MapKeyColumn(name="PRICE_BAND")
+    @MapKeyEnumerated(EnumType.STRING)
     private Map<PriceBand, BigDecimal> tariff;
 
     public Concert(){}
