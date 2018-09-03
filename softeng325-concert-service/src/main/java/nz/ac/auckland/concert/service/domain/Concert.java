@@ -14,27 +14,29 @@ import java.util.Set;
 @Table(name="CONCERTS")
 public class Concert {
 
-    @Column(name = "ID")
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "CID", nullable = false, unique = true)
     private long id;
 
-    @Column(name="TITLE")
+    @Column(name="TITLE", nullable = false)
     private String title;
 
-    @CollectionTable(name = "CONCERT_DATES")
     @ElementCollection
+    @CollectionTable(name = "CONCERT_DATES", joinColumns = @JoinColumn(name="CID"))
+    @Column(name = "DATE_TIME", nullable = false, unique = true)
     @Convert(converter=LocalDateTimeConverter.class)
     private Set<LocalDateTime> dates;
 
     @ManyToMany
-    @JoinTable(name = "CONCERT_PERFORMER", joinColumns = @JoinColumn(name="concert_id"),
-            inverseJoinColumns = @JoinColumn(name="performer_id"))
+    @JoinTable(name = "CONCERT_PERFORMER", joinColumns = @JoinColumn(name="CID"),
+            inverseJoinColumns = @JoinColumn(name="PID"))
+    @Column(name = "PERFORMER", nullable = false, unique = true)
     private Set<Performer> performers;
 
-    @CollectionTable(name = "CONCERT_TARIFS")
     @ElementCollection
-    @MapKeyColumn(name="PRICE_BAND")
+    @JoinTable(name="CONCERT_TARIFS", joinColumns = @JoinColumn(name="CID"))
+    @MapKeyColumn(name = "PRICE_BAND", nullable = false)
     @MapKeyEnumerated(EnumType.STRING)
     private Map<PriceBand, BigDecimal> tariff;
 

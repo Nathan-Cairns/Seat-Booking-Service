@@ -10,22 +10,24 @@ import java.util.Set;
 @Table(name="PERFORMERS")
 public class Performer {
 
-    @Column(name="ID")
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name="PID", nullable = false)
     private long id;
 
-    @Column(name = "GENRE")
     @Enumerated(EnumType.STRING)
+    @Column(name = "GENRE", nullable = false)
     private Genre genre;
 
-    @Column(name="IMAGE_NAME")
+    @Column(name="IMAGE_NAME", nullable = false)
     private String imageName;
 
-    @Column(name="NAME")
+    @Column(name="NAME", nullable = false)
     private String name;
 
-    @ManyToMany(mappedBy = "performers")
+    @ManyToMany
+    @JoinTable(name = "CONCERT_PERFORMERS", joinColumns = @JoinColumn(name="PID"),
+            inverseJoinColumns = @JoinColumn(name="CID"))
     private Set<Concert> concerts;
 
     public Performer() {}

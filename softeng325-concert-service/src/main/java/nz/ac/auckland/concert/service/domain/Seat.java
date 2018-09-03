@@ -1,20 +1,19 @@
 package nz.ac.auckland.concert.service.domain;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 
 @Entity
+@Table(name = "SEATS")
 public class Seat {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name="SID", nullable = false)
     private long id;
 
     public Seat() {}
 
-    public long getId() {
-        return id;
+    public void setId(long id) {
+        this.id = id;
     }
 }

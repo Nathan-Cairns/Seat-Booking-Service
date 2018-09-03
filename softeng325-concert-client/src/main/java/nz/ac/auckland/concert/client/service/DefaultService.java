@@ -115,27 +115,30 @@ public class DefaultService implements ConcertService {
 
     @Override
     public UserDTO authenticateUser(UserDTO user) throws ServiceException {
+        // Todo
         return null;
     }
 
     @Override
     public Image getImageForPerformer(PerformerDTO performer) throws ServiceException {
+        // Todo
         return null;
     }
 
     @Override
     public ReservationDTO reserveSeats(ReservationRequestDTO reservationRequest) throws ServiceException {
+        // Todo
         return null;
     }
 
     @Override
     public void confirmReservation(ReservationDTO reservation) throws ServiceException {
-
+        // Todo
     }
 
     @Override
     public void registerCreditCard(CreditCardDTO creditCard) throws ServiceException {
-
+        // Todo
     }
 
     @Override
