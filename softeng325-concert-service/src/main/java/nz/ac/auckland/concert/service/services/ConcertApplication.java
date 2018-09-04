@@ -19,11 +19,11 @@ public class ConcertApplication extends Application {
         _classes = new HashSet<>();
         _singletons = new HashSet<>();
 
-        _classes.add(ConcertResource.class);
-        _classes.add(PerformerResource.class);
-        _classes.add(UserResource.class);
+        _singletons.add(new ConcertResource());
+        _singletons.add(new PerformerResource());
+        _singletons.add(new UserResource());
 
-        _singletons.add(PersistenceManager.instance());
+        PersistenceManager pm = PersistenceManager.instance();
     }
 
     @Override
