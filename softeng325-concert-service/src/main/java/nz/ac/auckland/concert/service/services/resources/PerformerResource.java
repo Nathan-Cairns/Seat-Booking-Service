@@ -2,6 +2,7 @@ package nz.ac.auckland.concert.service.services.resources;
 
 import nz.ac.auckland.concert.common.dto.PerformerDTO;
 import nz.ac.auckland.concert.service.domain.Performer;
+import nz.ac.auckland.concert.service.mappers.PerformerMapper;
 import nz.ac.auckland.concert.service.services.PersistenceManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,9 +45,7 @@ public class PerformerResource {
 
             List<PerformerDTO> performerDTOs;
 
-            performerDTOs = performers.stream().map(performer -> new PerformerDTO(performer.getId(),
-                    performer.getName(), performer.getImageName(), performer.getGenre(),
-                    performer.getConcertIds())).collect(Collectors.toList());
+            performerDTOs = performers.stream().map(PerformerMapper::toDTO).collect(Collectors.toList());
 
             GenericEntity<List<PerformerDTO>> entity = new GenericEntity<List<PerformerDTO>>(performerDTOs) {
             };
@@ -80,8 +79,7 @@ public class PerformerResource {
                 return Response.status(Response.Status.NOT_FOUND).build();
             }
 
-            PerformerDTO performerDTO = new PerformerDTO(performer.getId(), performer.getName(), performer.getImageName(),
-                    performer.getGenre(), performer.getConcertIds());
+            PerformerDTO performerDTO = PerformerMapper.toDTO(performer);
 
             _logger.debug("Retrieved performer with id: " + id);
             return Response.ok(performerDTO).build();

@@ -2,6 +2,7 @@ package nz.ac.auckland.concert.service.services.resources;
 
 import nz.ac.auckland.concert.common.dto.ConcertDTO;
 import nz.ac.auckland.concert.service.domain.Concert;
+import nz.ac.auckland.concert.service.mappers.ConcertMapper;
 import nz.ac.auckland.concert.service.services.PersistenceManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,9 +44,7 @@ public class ConcertResource {
 
             em.getTransaction().commit();
 
-            List<ConcertDTO> concertDTOS = concerts.stream().map(concert -> new ConcertDTO(concert.getId(),
-                    concert.getTitle(), concert.getDates(), concert.getTariff(),
-                    concert.getPerformerIds())).collect(Collectors.toList());
+            List<ConcertDTO> concertDTOS = concerts.stream().map(ConcertMapper::toDTO).collect(Collectors.toList());
 
             GenericEntity<List<ConcertDTO>> entity = new GenericEntity<List<ConcertDTO>>(concertDTOS) {
             };
@@ -79,8 +78,7 @@ public class ConcertResource {
                 return Response.status(Response.Status.NOT_FOUND).build();
             }
 
-            ConcertDTO concertDTO = new ConcertDTO(concert.getId(), concert.getTitle(), concert.getDates(),
-                    concert.getTariff(), concert.getPerformerIds());
+            ConcertDTO concertDTO = ConcertMapper.toDTO(concert);
 
             _logger.debug("Successfully found concert with id: " + id);
             return Response.ok(concertDTO).build();

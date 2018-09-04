@@ -3,6 +3,7 @@ package nz.ac.auckland.concert.service.services.resources;
 import nz.ac.auckland.concert.common.dto.UserDTO;
 import nz.ac.auckland.concert.common.message.Messages;
 import nz.ac.auckland.concert.service.domain.User;
+import nz.ac.auckland.concert.service.mappers.UserMapper;
 import nz.ac.auckland.concert.service.services.PersistenceManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +45,7 @@ public class UserResource {
                 return Response.status(Response.Status.NOT_FOUND).build();
             }
 
-            UserDTO userDTO = new UserDTO(user.getUsername(), user.getPassword(), user.getLastName(), user.getFirstName());
+            UserDTO userDTO = UserMapper.toDTO(user);
 
             _logger.debug("Retrieved user with id: " + id);
             return Response.ok(userDTO).build();
@@ -75,12 +76,6 @@ public class UserResource {
                         .build();
             }
 
-            List<User> users = em.createQuery("SELECT u from User u", User.class).getResultList();
-
-            for (User user : users) {
-                _logger.debug(user.getUsername());
-            }
-
             if (em.find(User.class, userDTO.getUsername()) != null) {
                 _logger.debug("User already exists");
                 return Response.status(Response.Status.CONFLICT)
@@ -90,8 +85,7 @@ public class UserResource {
 
             em.getTransaction().commit();
 
-            User user = new User(userDTO.getUsername(), userDTO.getPassword(),
-                    userDTO.getFirstname(), userDTO.getLastname());
+            User user = UserMapper.toDomain(userDTO);
 
             em.getTransaction().begin();
 
