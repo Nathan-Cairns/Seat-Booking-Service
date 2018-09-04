@@ -6,8 +6,6 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.GetObjectRequest;
-import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import nz.ac.auckland.concert.common.dto.*;
 import nz.ac.auckland.concert.common.message.Messages;
 import org.slf4j.Logger;
@@ -15,7 +13,6 @@ import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Set;
 import javax.imageio.ImageIO;
@@ -201,8 +198,6 @@ public class DefaultService implements ConcertService {
                 throw new ServiceException(Messages.NO_IMAGE_FOR_PERFORMER);
             }
 
-            _logger.debug("Creating download dir...");
-
             // Create download dir
             File downloadDir = new File(DOWNLOAD_DIRECTORY);
             downloadDir.mkdir();
@@ -234,18 +229,8 @@ public class DefaultService implements ConcertService {
             _logger.debug("Downloading image " + imageName + " of artist " + performer.getName() + "...");
 
             // Download image
-            S3Object o = s3.getObject(AWS_BUCKET, imageName);
-            S3ObjectInputStream s3is = o.getObjectContent();
-            FileOutputStream fos = new FileOutputStream(imageFile);
-
-            byte[] read_buf = new byte[1024];
-            int read_len = 0;
-            while ((read_len = s3is.read(read_buf)) > 0) {
-                fos.write(read_buf, 0, read_len);
-            }
-
-            s3is.close();
-            fos.close();
+            GetObjectRequest req = new GetObjectRequest(AWS_BUCKET, imageName);
+            s3.getObject(req, imageFile);
 
             _logger.debug("Successfully retrieved image!");
             _logger.debug("Downloaded image to: " + imageFile.getAbsolutePath());
