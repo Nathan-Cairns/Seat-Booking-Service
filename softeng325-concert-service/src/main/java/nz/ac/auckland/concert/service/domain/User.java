@@ -1,6 +1,7 @@
 package nz.ac.auckland.concert.service.domain;
 
 import javax.persistence.*;
+import java.time.LocalDate;
 
 @Entity
 @Table(name="USER")
@@ -20,7 +21,14 @@ public class User {
     private String lastName;
 
     @OneToOne
+    @JoinColumn(name="CREDIT_CARD")
     private CreditCard creditCard;
+
+    @Column(name="TOKEN")
+    private String authToken;
+
+    @Column(name="TOKEN_TIME_STAMP")
+    private LocalDate authTokenTimeStamp;
 
     public User(){}
 
@@ -69,5 +77,21 @@ public class User {
 
     public void setLastName(String lastName) {
         this.lastName = lastName;
+    }
+
+    public String getAuthToken() {
+        return authToken;
+    }
+
+    public void setAuthToken(String authToken) {
+        this.authToken = authToken;
+    }
+
+    public LocalDate getAuthTokenTimeStamp() {
+        return authTokenTimeStamp;
+    }
+
+    public void setAuthTokenTimeStamp(LocalDate authTokenTimeStamp) {
+        this.authTokenTimeStamp = authTokenTimeStamp;
     }
 }

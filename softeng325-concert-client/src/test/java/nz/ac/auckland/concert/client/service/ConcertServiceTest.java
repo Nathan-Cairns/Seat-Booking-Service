@@ -128,6 +128,7 @@ public class ConcertServiceTest {
 			UserDTO userDTO = new UserDTO("Bulldog", "123", "Churchill", "Winston");
 			_service.createUser(userDTO);
 		} catch(ServiceException e) {
+			_logger.debug(e.getMessage());
 			fail();
 		}
 	}

@@ -11,10 +11,13 @@ import org.slf4j.LoggerFactory;
 import javax.persistence.EntityManager;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 import java.net.URI;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Path("/users")
 public class UserResource {
@@ -65,6 +68,8 @@ public class UserResource {
         try {
             _logger.debug("Creating user: " + userDTO.getUsername());
 
+            em.getTransaction().begin();
+
             List<String> required = new ArrayList<>();
             required.add(userDTO.getUsername());
             required.add(userDTO.getPassword());
@@ -73,7 +78,8 @@ public class UserResource {
 
             for (String s : required) {
                 if (s == null || s.equals("")) {
-                    return Response.status(Response.Status.BAD_REQUEST)
+                    return Response
+                            .status(Response.Status.BAD_REQUEST)
                             .entity(Messages.CREATE_USER_WITH_MISSING_FIELDS)
                             .build();
                 }
@@ -81,23 +87,89 @@ public class UserResource {
 
             if (em.find(User.class, userDTO.getUsername()) != null) {
                 _logger.debug("User already exists");
-                return Response.status(Response.Status.CONFLICT)
+                return Response
+                        .status(Response.Status.CONFLICT)
                         .entity(Messages.CREATE_USER_WITH_NON_UNIQUE_NAME)
                         .build();
             }
 
-            em.getTransaction().commit();
-
             User user = UserMapper.toDomain(userDTO);
 
-            em.getTransaction().begin();
+            String authToken = UUID.randomUUID().toString();
+            user.setAuthToken(authToken);
+            user.setAuthTokenTimeStamp(LocalDate.now());
 
             em.persist(user);
 
             em.getTransaction().commit();
 
             _logger.debug("Created user with id: " + user.getUsername());
-            return Response.created(URI.create("/users/" + user.getUsername())).build();
+            return Response
+                    .created(URI.create("/users/" + user.getUsername()))
+                    .build();
+        } catch (Exception e) {
+            return Response.serverError().build();
+        } finally {
+            em.close();
+        }
+    }
+
+    @PUT
+    @Path("/auth")
+    @Consumes(MediaType.APPLICATION_XML)
+    public Response authenticateUser(UserDTO userDTO) {
+        EntityManager em = _persistenceManager.createEntityManager();
+
+        try {
+            _logger.debug("Authenticating user: " + userDTO.getUsername());
+
+            em.getTransaction().begin();
+
+            User user = em.find(User.class, userDTO.getUsername());
+
+            // Missing username or password
+            List<String> required = new ArrayList<>();
+            required.add(userDTO.getUsername());
+            required.add(userDTO.getPassword());
+
+            for (String s : required) {
+                if (s == null || s.equals("")) {
+                    return Response
+                            .status(Response.Status.BAD_REQUEST)
+                            .entity(Messages.AUTHENTICATE_USER_WITH_MISSING_FIELDS)
+                            .build();
+                }
+            }
+
+            // User not found
+            if (user == null) {
+                return Response
+                        .status(Response.Status.NOT_FOUND)
+                        .entity(Messages.AUTHENTICATE_NON_EXISTENT_USER)
+                        .build();
+            }
+
+            // Incorrect password
+            if (!user.getPassword().equals(userDTO.getPassword())) {
+                return Response
+                        .status(Response.Status.UNAUTHORIZED)
+                        .entity(Messages.AUTHENTICATE_USER_WITH_ILLEGAL_PASSWORD)
+                        .build();
+            }
+
+            if (user.getAuthToken() == null) {
+                String authToken = UUID.randomUUID().toString();
+                user.setAuthToken(authToken);
+                user.setAuthTokenTimeStamp(LocalDate.now());
+                em.merge(user);
+            }
+
+            em.getTransaction().commit();
+
+            return Response
+                    .accepted(UserMapper.toDTO(user))
+                    .cookie(new NewCookie("AuthToken", user.getAuthToken()))
+                    .build();
         } catch (Exception e) {
             return Response.serverError().build();
         } finally {
