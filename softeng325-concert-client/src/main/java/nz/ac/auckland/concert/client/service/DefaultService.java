@@ -48,7 +48,6 @@ public class DefaultService implements ConcertService {
             });
 
             _logger.debug("Successfully retrieved and unmarshalled concerts from server.");
-            response.close();
             return concertDTOS;
         } catch (Exception e) {
             throw new ServiceException(Messages.SERVICE_COMMUNICATION_ERROR);
@@ -73,7 +72,6 @@ public class DefaultService implements ConcertService {
             });
 
             _logger.debug("Successfully retrieved and unmarshalled performers from server.");
-            response.close();
             return performerDTOList;
         } catch (Exception e) {
             throw new ServiceException(Messages.SERVICE_COMMUNICATION_ERROR);
@@ -104,7 +102,6 @@ public class DefaultService implements ConcertService {
             }
 
             _logger.debug("User Successfully created at url: " + response.getLocation());
-            response.close();
             return new UserDTO(newUser.getUsername(), newUser.getPassword(),
                     newUser.getLastname(), newUser.getFirstname());
         } finally {
