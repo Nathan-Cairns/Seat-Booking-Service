@@ -428,4 +428,22 @@ public class ConcertServiceTest {
 			assertEquals(Messages.UNAUTHENTICATED_REQUEST, e.getMessage());
 		} 
 	}
+
+	@Test
+    public void testDownloadImage() {
+        Set<PerformerDTO> performers = _service.getPerformers();
+
+        for (PerformerDTO performerDTO : performers) {
+            try {
+                _service.getImageForPerformer(performerDTO);
+            } catch (Exception e) {
+                if (e instanceof ServiceException && performerDTO == null || performerDTO.equals("")) {
+                    assertEquals(e.getMessage(), Messages.NO_IMAGE_FOR_PERFORMER);
+                } else {
+                    _logger.debug(e.getMessage());
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
 }
