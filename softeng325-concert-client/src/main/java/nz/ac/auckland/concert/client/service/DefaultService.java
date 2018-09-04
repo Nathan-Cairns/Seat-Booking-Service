@@ -243,6 +243,7 @@ public class DefaultService implements ConcertService {
             if (e instanceof ServiceException) {
                 throw e;
             } else {
+                // TODO check images can be loaded in currently getting an image to do with invalid / corrupted jpegs
                 throw new ServiceException(Messages.SERVICE_COMMUNICATION_ERROR);
             }
         }
