@@ -13,6 +13,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 
 @Path("/users")
@@ -64,16 +65,18 @@ public class UserResource {
         try {
             _logger.debug("Creating user: " + userDTO.getUsername());
 
-            String u = userDTO.getUsername();
-            String p = userDTO.getPassword();
-            String fn = userDTO.getFirstname();
-            String ln = userDTO.getLastname();
+            List<String> required = new ArrayList<>();
+            required.add(userDTO.getUsername());
+            required.add(userDTO.getPassword());
+            required.add(userDTO.getFirstname());
+            required.add(userDTO.getLastname());
 
-            if (u == null || u.equals("") || p == null || p.equals("")
-                    || fn == null || fn.equals("") || ln == null || ln.equals("")) {
-                return Response.status(Response.Status.BAD_REQUEST)
-                        .entity(Messages.CREATE_USER_WITH_MISSING_FIELDS)
-                        .build();
+            for (String s : required) {
+                if (s == null || s.equals("")) {
+                    return Response.status(Response.Status.BAD_REQUEST)
+                            .entity(Messages.CREATE_USER_WITH_MISSING_FIELDS)
+                            .build();
+                }
             }
 
             if (em.find(User.class, userDTO.getUsername()) != null) {
