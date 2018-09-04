@@ -32,10 +32,10 @@ public class ConcertResource {
     @GET
     @Produces(MediaType.APPLICATION_XML)
     public Response getConcerts() {
+        EntityManager em = _persistenceManager.createEntityManager();
+
         try {
             _logger.debug("Retrieving all concerts");
-
-            EntityManager em = _persistenceManager.createEntityManager();
 
             em.getTransaction().begin();
 
@@ -52,6 +52,8 @@ public class ConcertResource {
             return Response.ok(entity).build();
         } catch (Exception e) {
             return Response.serverError().build();
+        } finally {
+            em.close();
         }
     }
 
@@ -59,9 +61,10 @@ public class ConcertResource {
     @Path("{id}")
     @Produces(MediaType.APPLICATION_XML)
     public Response getConcert(@PathParam("id") long id) {
+        EntityManager em = _persistenceManager.createEntityManager();
+
         try {
             _logger.debug("Retrieving Concert with id: " + id + "...");
-            EntityManager em = _persistenceManager.createEntityManager();
 
             em.getTransaction().begin();
 
@@ -79,6 +82,8 @@ public class ConcertResource {
             return Response.ok(concertDTO).build();
         } catch (Exception e) {
             return Response.serverError().build();
+        } finally {
+            em.close();
         }
     }
 

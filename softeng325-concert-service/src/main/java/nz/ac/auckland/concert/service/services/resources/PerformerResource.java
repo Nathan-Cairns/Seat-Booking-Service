@@ -31,10 +31,10 @@ public class PerformerResource {
     @GET
     @Produces(MediaType.APPLICATION_XML)
     public Response getPerformers() {
+        EntityManager em = _persistenceManager.createEntityManager();
+
         try {
             _logger.debug("Retrieving all performers...");
-
-            EntityManager em = _persistenceManager.createEntityManager();
 
             em.getTransaction().begin();
 
@@ -53,6 +53,8 @@ public class PerformerResource {
             return Response.ok(entity).build();
         } catch (Exception e) {
             return Response.serverError().build();
+        } finally {
+            em.close();
         }
     }
 
@@ -60,10 +62,10 @@ public class PerformerResource {
     @Path("{id}")
     @Produces(MediaType.APPLICATION_XML)
     public Response getPerformer(@PathParam("id") long id) {
+        EntityManager em = _persistenceManager.createEntityManager();
+
         try {
             _logger.debug("Retrieving performer with id: " + id + "...");
-
-            EntityManager em = _persistenceManager.createEntityManager();
 
             em.getTransaction().begin();
 
@@ -81,6 +83,8 @@ public class PerformerResource {
             return Response.ok(performerDTO).build();
         } catch (Exception e) {
             return Response.serverError().build();
+        } finally {
+            em.close();
         }
     }
 }

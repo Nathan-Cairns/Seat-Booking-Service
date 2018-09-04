@@ -28,10 +28,10 @@ public class UserResource {
     @GET
     @Produces(MediaType.APPLICATION_XML)
     public Response getUser(@PathParam("id") long id) {
+        EntityManager em = _persistenceManager.createEntityManager();
+
         try {
             _logger.debug("Retrieving user with id " + id);
-
-            EntityManager em = _persistenceManager.createEntityManager();
 
             em.getTransaction().begin();
 
@@ -48,12 +48,16 @@ public class UserResource {
             return Response.ok(userDTO).build();
         } catch (Exception e) {
             return Response.serverError().build();
+        } finally {
+            em.close();
         }
     }
 
     @POST
     @Consumes(MediaType.APPLICATION_XML)
     public Response postUser(UserDTO userDTO){
+        EntityManager em = _persistenceManager.createEntityManager();
+
         try {
             _logger.debug("Creating user: " + userDTO.getUsername());
 
@@ -68,8 +72,6 @@ public class UserResource {
                         .entity(Messages.CREATE_USER_WITH_MISSING_FIELDS)
                         .build();
             }
-
-            EntityManager em = _persistenceManager.createEntityManager();
 
             List<User> users = em.createQuery("SELECT u from User u", User.class).getResultList();
 
@@ -97,6 +99,8 @@ public class UserResource {
             return Response.created(URI.create("/users/" + user.getUsername())).build();
         } catch (Exception e) {
             return Response.serverError().build();
+        } finally {
+            em.close();
         }
     }
 }
