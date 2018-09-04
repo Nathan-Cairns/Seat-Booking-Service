@@ -2,6 +2,7 @@ package nz.ac.auckland.concert.service.services;
 
 import nz.ac.auckland.concert.service.services.resources.ConcertResource;
 import nz.ac.auckland.concert.service.services.resources.PerformerResource;
+import nz.ac.auckland.concert.service.services.resources.ReservationResource;
 import nz.ac.auckland.concert.service.services.resources.UserResource;
 
 import javax.ws.rs.ApplicationPath;
@@ -22,8 +23,9 @@ public class ConcertApplication extends Application {
         _singletons.add(new ConcertResource());
         _singletons.add(new PerformerResource());
         _singletons.add(new UserResource());
+        _singletons.add(new ReservationResource());
 
-        PersistenceManager pm = PersistenceManager.instance();
+        PersistenceManager.instance();
     }
 
     @Override

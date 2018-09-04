@@ -38,6 +38,7 @@ public class DefaultService implements ConcertService {
     private static final String PERFORMER_SERVICE = WEB_SERVICE_URI + "/performers";
     private static final String USER_SERVICE = WEB_SERVICE_URI + "/users";
     private static final String AUTH_SERVICE = USER_SERVICE + "/auth";
+    private static final String RESERVATION_SERVICE = WEB_SERVICE_URI + "/reservations";
 
     /* AWS */
 
@@ -251,8 +252,32 @@ public class DefaultService implements ConcertService {
 
     @Override
     public ReservationDTO reserveSeats(ReservationRequestDTO reservationRequest) throws ServiceException {
-        // Todo
-        return null;
+        Client client = ClientBuilder.newClient();
+        Response response;
+
+        try {
+
+            // TODO make checks for auth token and shit
+
+            Builder builder = client.target(RESERVATION_SERVICE).request()
+                    .accept(MediaType.APPLICATION_XML);
+
+            _logger.debug("Making reservation request");
+            response = builder.post(Entity.entity(reservationRequest, MediaType.APPLICATION_XML));
+
+            // TODO unpack payload
+
+            // Todo
+            return null;
+        } catch (Exception e) {
+            if (e instanceof ServiceException) {
+                throw e;
+            } else {
+                throw new ServiceException(Messages.SERVICE_COMMUNICATION_ERROR);
+            }
+        } finally {
+            client.close();
+        }
     }
 
     @Override
