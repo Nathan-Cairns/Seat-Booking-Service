@@ -41,6 +41,8 @@ public class ConcertResource {
 
             List<Concert> concerts = em.createQuery("SELECT c FROM Concert c", Concert.class).getResultList();
 
+            em.getTransaction().commit();
+
             List<ConcertDTO> concertDTOS = concerts.stream().map(concert -> new ConcertDTO(concert.getId(),
                     concert.getTitle(), concert.getDates(), concert.getTariff(),
                     concert.getPerformerIds())).collect(Collectors.toList());
@@ -69,6 +71,8 @@ public class ConcertResource {
             em.getTransaction().begin();
 
             Concert concert = em.find(Concert.class, id);
+
+            em.getTransaction().commit();
 
             if (concert == null) {
                 _logger.debug("Could not find concert with id: " + id);

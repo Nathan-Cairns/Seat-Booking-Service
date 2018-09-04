@@ -37,6 +37,8 @@ public class UserResource {
 
             User user = em.find(User.class, id);
 
+            em.getTransaction().commit();
+
             if (user == null) {
                 _logger.debug("Could not find user with id: " + id);
                 return Response.status(Response.Status.NOT_FOUND).build();
@@ -85,6 +87,8 @@ public class UserResource {
                         .entity(Messages.CREATE_USER_WITH_NON_UNIQUE_NAME)
                         .build();
             }
+
+            em.getTransaction().commit();
 
             User user = new User(userDTO.getUsername(), userDTO.getPassword(),
                     userDTO.getFirstname(), userDTO.getLastname());

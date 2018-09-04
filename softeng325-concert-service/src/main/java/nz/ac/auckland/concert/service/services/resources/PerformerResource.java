@@ -40,6 +40,8 @@ public class PerformerResource {
 
             List<Performer> performers = em.createQuery("SELECT p FROM Performer p", Performer.class).getResultList();
 
+            em.getTransaction().commit();
+
             List<PerformerDTO> performerDTOs;
 
             performerDTOs = performers.stream().map(performer -> new PerformerDTO(performer.getId(),
@@ -70,6 +72,8 @@ public class PerformerResource {
             em.getTransaction().begin();
 
             Performer performer = em.find(Performer.class, id);
+
+            em.getTransaction().commit();
 
             if (performer == null) {
                 _logger.debug("Could not find performer with id " + id);
