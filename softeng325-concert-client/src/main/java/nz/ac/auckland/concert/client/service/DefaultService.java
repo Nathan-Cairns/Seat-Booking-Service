@@ -2,6 +2,7 @@ package nz.ac.auckland.concert.client.service;
 
 import nz.ac.auckland.concert.common.dto.*;
 import nz.ac.auckland.concert.common.message.Messages;
+import nz.ac.auckland.concert.service.mappers.UserMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -97,6 +98,9 @@ public class DefaultService implements ConcertService {
                 throw new ServiceException(response.readEntity(String.class));
             }
 
+            _authToken = (Cookie) response.getCookies().values().toArray()[0];
+            _logger.debug("Auth token set to: " + _authToken);
+
             _logger.debug("User Successfully created at url: " + response.getLocation());
             return new UserDTO(newUser.getUsername(), newUser.getPassword(),
                     newUser.getLastname(), newUser.getFirstname());
@@ -132,6 +136,9 @@ public class DefaultService implements ConcertService {
                 _logger.debug(String.valueOf(response.getStatus()));
                 throw new ServiceException(response.readEntity(String.class));
             }
+
+            _authToken = (Cookie) response.getCookies().values().toArray()[0];
+            _logger.debug("Auth token set to: " + _authToken);
 
             _logger.debug("User successfully authenticated!");
             return response.readEntity(UserDTO.class);

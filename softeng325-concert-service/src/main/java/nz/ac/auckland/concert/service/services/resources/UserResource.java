@@ -98,6 +98,7 @@ public class UserResource {
             String authToken = UUID.randomUUID().toString();
             user.setAuthToken(authToken);
             user.setAuthTokenTimeStamp(LocalDate.now());
+            _logger.debug("Generated Auth token: " + authToken);
 
             em.persist(user);
 
@@ -106,6 +107,7 @@ public class UserResource {
             _logger.debug("Created user with id: " + user.getUsername());
             return Response
                     .created(URI.create("/users/" + user.getUsername()))
+                    .cookie(new NewCookie("AuthToken", user.getAuthToken()))
                     .build();
         } catch (Exception e) {
             return Response.serverError().build();
@@ -161,6 +163,7 @@ public class UserResource {
                 String authToken = UUID.randomUUID().toString();
                 user.setAuthToken(authToken);
                 user.setAuthTokenTimeStamp(LocalDate.now());
+                _logger.debug("Generated Auth token: " + authToken);
                 em.merge(user);
             }
 
