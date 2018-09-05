@@ -38,7 +38,9 @@ public class DefaultService implements ConcertService {
     private static final String PERFORMER_SERVICE = WEB_SERVICE_URI + "/performers";
     private static final String USER_SERVICE = WEB_SERVICE_URI + "/users";
     private static final String AUTH_SERVICE = USER_SERVICE + "/auth";
-    private static final String RESERVATION_SERVICE = WEB_SERVICE_URI + "/reservations";
+    private static final String BOOKINGS_SERVICE = WEB_SERVICE_URI + "/bookings";
+    private static final String RESERVATION_SERVICE = BOOKINGS_SERVICE + "/reserve";
+    private static final String BOOKING_CONFIRMATION_SERVICE = BOOKINGS_SERVICE + "/book";
 
     /* AWS */
 

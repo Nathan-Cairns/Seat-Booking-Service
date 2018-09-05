@@ -1,11 +1,15 @@
 package nz.ac.auckland.concert.service.domain;
 
 import nz.ac.auckland.concert.common.types.PriceBand;
+import nz.ac.auckland.concert.service.domain.jpa.LocalDateTimeConverter;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 import java.util.Set;
 
-@Entity
+@Entity(name = "RESERVATIONS")
 @Table(name="RESERVATIONS")
 public class Reservation {
 
@@ -16,6 +20,7 @@ public class Reservation {
 
     @ManyToOne
     @JoinColumn(name = "USER", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 
     @ManyToOne
@@ -26,22 +31,27 @@ public class Reservation {
     @Enumerated(EnumType.STRING)
     private PriceBand priceBand;
 
-    @ElementCollection
-    @CollectionTable(name = "RESERVERED_SEATS", joinColumns = @JoinColumn(name = "rid"))
-    @Column(name = "SEATS", nullable = false)
+    @Column(name = "DATE_TIME")
+    @Convert(converter = LocalDateTimeConverter.class)
+    private LocalDateTime dateTime;
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "_reservation")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Set<Seat> seats;
 
+    @Column(name = "CONFIRMED", nullable = false)
     private Boolean confirmed = false;
 
     public Reservation() {
 
     }
 
-    public Reservation(User user, Concert concert, PriceBand priceBand, Set<Seat> seats) {
+    public Reservation(User user, Concert concert, PriceBand priceBand, Set<Seat> seats, LocalDateTime dateTime) {
         this.user = user;
         this.concert = concert;
         this.priceBand = priceBand;
         this.seats = seats;
+        this.dateTime = dateTime;
     }
 
     public long getId() {
@@ -86,5 +96,13 @@ public class Reservation {
 
     public void setConfirmed(Boolean confirmed) {
         this.confirmed = confirmed;
+    }
+
+    public LocalDateTime getDateTime() {
+        return dateTime;
+    }
+
+    public void setDateTime(LocalDateTime dateTime) {
+        this.dateTime = dateTime;
     }
 }

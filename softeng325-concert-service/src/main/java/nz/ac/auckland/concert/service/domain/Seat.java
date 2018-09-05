@@ -34,9 +34,6 @@ public class Seat implements Serializable {
     @Convert(converter = SeatNumberConverter.class)
     private SeatNumber seatNumber;
 
-    @ManyToOne
-    private Reservation reservation;
-
     @Column(name = "STATUS", nullable = false)
     @Enumerated(EnumType.STRING)
     private SeatStatus seatStatus = SeatStatus.FREE;
@@ -48,6 +45,9 @@ public class Seat implements Serializable {
     @Column(name = "TIME_STAMP")
     @Convert(converter = LocalDateTimeConverter.class)
     private LocalDateTime timeStamp;
+
+    @ManyToOne
+    private Reservation _reservation;
 
     public Seat() {}
 
@@ -90,14 +90,6 @@ public class Seat implements Serializable {
 
     public void setSeatNumber(SeatNumber seatNumber) {
         this.seatNumber = seatNumber;
-    }
-
-    public Reservation getReservation() {
-        return reservation;
-    }
-
-    public void setReservation(Reservation reservation) {
-        this.reservation = reservation;
     }
 
     public SeatStatus getSeatStatus() {

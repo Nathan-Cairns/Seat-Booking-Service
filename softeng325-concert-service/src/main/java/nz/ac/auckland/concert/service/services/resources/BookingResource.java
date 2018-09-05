@@ -35,8 +35,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Path("/reservations")
-public class ReservationResource {
+@Path("/bookings")
+public class BookingResource {
 
     private static final Response MISSING_FIELD_RESPONSE = Response
             .status(Response.Status.BAD_REQUEST)
@@ -46,13 +46,14 @@ public class ReservationResource {
     private PersistenceManager _persistenceManager;
 
     private Logger _logger = LoggerFactory
-            .getLogger(ReservationResource.class);
+            .getLogger(BookingResource.class);
 
-    public ReservationResource() {
+    public BookingResource() {
         _persistenceManager = PersistenceManager.instance();
     }
 
     @POST
+    @Path("/reserve")
     @Consumes(MediaType.APPLICATION_XML)
     public Response requestReservation(ReservationRequestDTO reservationRequestDTO,
                                        @CookieParam("AuthToken") Cookie authToken) {
@@ -145,6 +146,7 @@ public class ReservationResource {
                 }
             }
             // Get list of all not available seats
+            _logger.debug("Get unavailable seats");
             List<Seat> unavailableSeats = em.createQuery("SELECT s FROM Seat s WHERE s.concert.id = :cid AND " +
                     "s.dateTime=:date AND s.priceBand = :priceBand AND s.seatStatus = :status " +
                     "OR s.seatStatus = :status2", Seat.class)
@@ -204,7 +206,8 @@ public class ReservationResource {
                     user,
                     concert,
                     reservationRequestDTO.getSeatType(),
-                    pendingSeats
+                    pendingSeats,
+                    reservationRequestDTO.getDate()
             );
 
             em.persist(reservation);
@@ -217,6 +220,48 @@ public class ReservationResource {
         } catch (Exception e) {
             _logger.debug(e.getMessage());
             e.printStackTrace();
+            return Response.serverError().build();
+        } finally {
+            em.close();
+        }
+    }
+
+    @POST
+    @Path("/book")
+    @Consumes(MediaType.APPLICATION_XML)
+    public Response makeReservation(ReservationDTO reservationDTO,
+                                    @CookieParam("AuthToken") Cookie authToken) {
+        EntityManager em = _persistenceManager.createEntityManager();
+
+        try {
+
+            em.getTransaction().begin();
+
+            // Check there is an auth token
+            if (authToken == null) {
+                _logger.debug("No auth token");
+                return Response
+                        .status(Response.Status.UNAUTHORIZED)
+                        .entity(Messages.UNAUTHENTICATED_REQUEST)
+                        .build();
+            }
+
+            // Check there is a user with auth token
+            User user = em.createQuery("SELECT u from User u WHERE u.authToken = :token", User.class)
+                    .setParameter("token", authToken.getValue()).getSingleResult();
+
+            if (user == null) {
+                _logger.debug("No user corresponding to auth token");
+                return Response
+                        .status(Response.Status.UNAUTHORIZED)
+                        .entity(Messages.BAD_AUTHENTICATON_TOKEN)
+                        .build();
+            }
+
+            em.getTransaction().commit();
+            // TODO return response
+            return null;
+        } catch (Exception e) {
             return Response.serverError().build();
         } finally {
             em.close();
