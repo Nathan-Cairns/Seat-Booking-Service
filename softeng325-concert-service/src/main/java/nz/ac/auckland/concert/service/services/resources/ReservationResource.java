@@ -60,6 +60,7 @@ public class ReservationResource {
             em.getTransaction().begin();
             // Check auth token is not null
             if (authToken == null) {
+                _logger.debug("No auth token");
                 return Response
                         .status(Response.Status.UNAUTHORIZED)
                         .entity(Messages.UNAUTHENTICATED_REQUEST)
@@ -71,9 +72,10 @@ public class ReservationResource {
 
             // Check there is a user with auth token
             User user = em.createQuery("SELECT u from User u WHERE u.authToken = :token", User.class)
-                    .setParameter("token", authToken).getSingleResult();
+                    .setParameter("token", authToken.getValue()).getSingleResult();
 
             if (user == null) {
+                _logger.debug("No user corresponding to auth token");
                 return Response
                         .status(Response.Status.UNAUTHORIZED)
                         .entity(Messages.BAD_AUTHENTICATON_TOKEN)
@@ -82,20 +84,25 @@ public class ReservationResource {
 
             // Check required fields
             if (reservationRequestDTO.getNumberOfSeats() == 0) {
+                _logger.debug("Missing field: seats");
                 return MISSING_FIELD_RESPONSE;
             }
             if (reservationRequestDTO.getConcertId() == null) {
+                _logger.debug("Missing field: concert id");
                 return MISSING_FIELD_RESPONSE;
             }
             if (reservationRequestDTO.getDate() == null) {
+                _logger.debug("Missing field: date");
                 return MISSING_FIELD_RESPONSE;
             }
             if (reservationRequestDTO.getSeatType() == null) {
+                _logger.debug("Missing field: seat type");
                 return MISSING_FIELD_RESPONSE;
             }
 
             // Check valid date
             if (!concert.getDates().contains(reservationRequestDTO.getDate())) {
+                _logger.debug("Invalid date");
                 return Response
                         .status(Response.Status.BAD_REQUEST)
                         .entity(Messages.CONCERT_NOT_SCHEDULED_ON_RESERVATION_DATE)
@@ -116,6 +123,7 @@ public class ReservationResource {
 
             // If no seats exist for concert create them
             if (seats.isEmpty()) {
+                _logger.debug("Setting up seats");
                 for (SeatRow seatRow : SeatRow.values()) {
                     for (int i = 1; i <= TheatreLayout.getNumberOfSeatsForRow(seatRow); i++) {
                         Seat seat = new Seat(
@@ -148,9 +156,13 @@ public class ReservationResource {
                     .setLockMode(LockModeType.OPTIMISTIC)
                     .getResultList();
 
+            _logger.debug(unavailableSeats.size() + " unavailable seats");
+
             // Convert unavailable seats to DTO
             Set<SeatDTO> unavailableSeatDTOList =
                     unavailableSeats.stream().map(SeatMapper::toDTO).collect(Collectors.toSet());
+
+            _logger.debug("Size of dto unavailable seats: " + unavailableSeatDTOList.size());
 
             // Get available seats
             Set<SeatDTO> availableSeats = TheatreUtility.findAvailableSeats(
@@ -160,15 +172,18 @@ public class ReservationResource {
 
             // Check if enough seats are available
             if (availableSeats.isEmpty() || availableSeats.size() < reservationRequestDTO.getNumberOfSeats()) {
+                _logger.debug("Not enough seats available");
                 return Response
                         .status(Response.Status.REQUESTED_RANGE_NOT_SATISFIABLE)
                         .entity(Messages.INSUFFICIENT_SEATS_AVAILABLE_FOR_RESERVATION)
                         .build();
             }
             // Set status to pending for required amount of seats
+            _logger.debug("Retrieving " + reservationRequestDTO.getNumberOfSeats() + " seats");
+            _logger.debug(availableSeats.size() + " available seats");
             Set<Seat> pendingSeats = new HashSet<>();
-            int i = 0;
             for (SeatDTO s : availableSeats) {
+                _logger.debug("Adding pending seat with row " + s.getRow() + " and number " + s.getNumber());
                 Seat seatToReserve = em.createQuery("SELECT s FROM Seat s WHERE s.concert.id = :cid " +
                         "AND s.dateTime = :date AND s.seatRow = :row AND s.seatNumber = :number", Seat.class)
                         .setParameter("cid", concert.getId())
@@ -181,10 +196,6 @@ public class ReservationResource {
                 em.persist(seatToReserve);
 
                 pendingSeats.add(seatToReserve);
-
-                i++;
-                if (i == reservationRequestDTO.getNumberOfSeats() - 1)
-                    break;
             }
 
             Reservation reservation = new Reservation(
@@ -199,9 +210,11 @@ public class ReservationResource {
 
             ReservationDTO reservationDTO = ReservationMapper.toDTO(reservation, reservationRequestDTO);
             return Response
-                    .ok(reservationDTO)
+                    .accepted(reservationDTO)
                     .build();
         } catch (Exception e) {
+            _logger.debug(e.getMessage());
+            e.printStackTrace();
             return Response.serverError().build();
         } finally {
             em.close();

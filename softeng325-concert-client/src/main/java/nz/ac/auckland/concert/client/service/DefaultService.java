@@ -256,19 +256,26 @@ public class DefaultService implements ConcertService {
         Response response;
 
         try {
-
-            // TODO make checks for auth token and shit
+            if (_authToken == null) {
+                throw new ServiceException(Messages.UNAUTHENTICATED_REQUEST);
+            }
 
             Builder builder = client.target(RESERVATION_SERVICE).request()
                     .accept(MediaType.APPLICATION_XML);
 
             _logger.debug("Making reservation request");
-            response = builder.post(Entity.entity(reservationRequest, MediaType.APPLICATION_XML));
+            response = builder
+                    .cookie("AuthToken", _authToken.getValue())
+                    .post(Entity.entity(reservationRequest, MediaType.APPLICATION_XML));
 
-            // TODO unpack payload
+            // Throw appropriate exception baseed on response
+            if (response.getStatus() != Response.Status.ACCEPTED.getStatusCode()) {
+                _logger.debug(String.valueOf(response.getStatus()));
+                throw new ServiceException(response.readEntity(String.class));
+            }
 
-            // Todo
-            return null;
+            ReservationDTO reservationDTO = response.readEntity(ReservationDTO.class);
+            return reservationDTO;
         } catch (Exception e) {
             if (e instanceof ServiceException) {
                 throw e;

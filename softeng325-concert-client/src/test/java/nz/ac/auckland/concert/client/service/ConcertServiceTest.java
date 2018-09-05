@@ -242,6 +242,8 @@ public class ConcertServiceTest {
 			}
 			
 		} catch(ServiceException e) {
+		    _logger.debug(e.getMessage());
+		    e.printStackTrace();
 			fail();
 		}
 	}
