@@ -1,5 +1,7 @@
 package nz.ac.auckland.concert.service.services;
 
+import nz.ac.auckland.concert.service.domain.Reservation;
+import nz.ac.auckland.concert.service.domain.Seat;
 import nz.ac.auckland.concert.service.services.resources.ConcertResource;
 import nz.ac.auckland.concert.service.services.resources.PerformerResource;
 import nz.ac.auckland.concert.service.services.resources.BookingResource;
@@ -51,10 +53,20 @@ public class ConcertApplication extends Application {
         try {
             em.getTransaction().begin();
 
-            List<User> users = em.createQuery("SELECT u FROM User u", User.class).getResultList();
+            List<User> users = em
+                    .createQuery("SELECT u FROM User u", User.class)
+                    .getResultList();
+
+            List<Seat> seats = em
+                    .createQuery("SELECT s FROM Seat s", Seat.class)
+                    .getResultList();
 
             for (User u : users) {
                 em.remove(u);
+            }
+
+            for(Seat s: seats) {
+                em.remove(s);
             }
 
             em.flush();
