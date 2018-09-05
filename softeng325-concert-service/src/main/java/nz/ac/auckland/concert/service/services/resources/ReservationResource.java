@@ -109,11 +109,6 @@ public class ReservationResource {
                         .build();
             }
 
-            em.getTransaction().commit();
-
-            // Check and update seats
-            em.getTransaction().begin();
-
             List<Seat> seats = em.createQuery("SELECT s from Seat s WHERE s.concert.id = :cid " +
                     "AND s.dateTime = :date", Seat.class)
                     .setParameter("cid", concert.getId())
@@ -138,16 +133,10 @@ public class ReservationResource {
                 // TODO
                 // Free seats which have been held for too long???
             }
-
-            em.getTransaction().commit();
-
-            // Make reservation
-            em.getTransaction().begin();
-
             // Get list of all not available seats
             List<Seat> unavailableSeats = em.createQuery("SELECT s FROM Seat s WHERE s.concert.id = :cid AND " +
                     "s.dateTime=:date AND s.priceBand = :priceBand AND s.seatStatus = :status " +
-                    "AND s.seatStatus = :status2", Seat.class)
+                    "OR s.seatStatus = :status2", Seat.class)
                     .setParameter("cid", concert.getId())
                     .setParameter("date", reservationRequestDTO.getDate())
                     .setParameter("priceBand", reservationRequestDTO.getSeatType())
