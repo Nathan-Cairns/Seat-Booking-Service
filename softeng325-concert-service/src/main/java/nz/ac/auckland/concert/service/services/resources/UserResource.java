@@ -1,8 +1,11 @@
 package nz.ac.auckland.concert.service.services.resources;
 
+import nz.ac.auckland.concert.common.dto.CreditCardDTO;
 import nz.ac.auckland.concert.common.dto.UserDTO;
 import nz.ac.auckland.concert.common.message.Messages;
+import nz.ac.auckland.concert.service.domain.CreditCard;
 import nz.ac.auckland.concert.service.domain.User;
+import nz.ac.auckland.concert.service.mappers.CreditCardMapper;
 import nz.ac.auckland.concert.service.mappers.UserMapper;
 import nz.ac.auckland.concert.service.services.PersistenceManager;
 import org.slf4j.Logger;
@@ -10,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.persistence.EntityManager;
 import javax.ws.rs.*;
+import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
@@ -173,6 +177,58 @@ public class UserResource {
                     .accepted(UserMapper.toDTO(user))
                     .cookie(new NewCookie("AuthToken", user.getAuthToken()))
                     .build();
+        } catch (Exception e) {
+            return Response.serverError().build();
+        } finally {
+            em.close();
+        }
+    }
+
+    @POST
+    @Path("/credit_card")
+    public Response addCreditCard(CreditCardDTO creditCardDTO,
+                                  @CookieParam("AuthToken") Cookie authToken) {
+        EntityManager em = _persistenceManager.createEntityManager();
+
+        try {
+
+            em.getTransaction().begin();
+
+            // Check there is an auth token
+            if (authToken == null) {
+                _logger.debug("No auth token");
+                return Response
+                        .status(Response.Status.UNAUTHORIZED)
+                        .entity(Messages.UNAUTHENTICATED_REQUEST)
+                        .build();
+            }
+
+            // Check there is a user with auth token
+            User user = em.createQuery("SELECT u from User u WHERE u.authToken = :token", User.class)
+                    .setParameter("token", authToken.getValue()).getSingleResult();
+
+            if (user == null) {
+                _logger.debug("No user corresponding to auth token");
+                return Response
+                        .status(Response.Status.UNAUTHORIZED)
+                        .entity(Messages.BAD_AUTHENTICATON_TOKEN)
+                        .build();
+            }
+
+            CreditCard creditCard = CreditCardMapper.toDomain(creditCardDTO);
+
+            _logger.debug("Registering credit card with #: " + creditCard.get_number() +
+                    ", name: " + creditCard.get_name() + ", expiry: " + creditCard.get_expiryDate() +
+                    ", type: " + creditCard.get_type());
+
+            user.setCreditCard(creditCard);
+
+            em.persist(creditCard);
+            em.merge(user);
+
+            em.getTransaction().commit();
+
+            return Response.accepted().build();
         } catch (Exception e) {
             return Response.serverError().build();
         } finally {

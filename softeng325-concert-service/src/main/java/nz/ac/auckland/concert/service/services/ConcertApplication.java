@@ -1,6 +1,6 @@
 package nz.ac.auckland.concert.service.services;
 
-import nz.ac.auckland.concert.service.domain.Reservation;
+import nz.ac.auckland.concert.service.domain.CreditCard;
 import nz.ac.auckland.concert.service.domain.Seat;
 import nz.ac.auckland.concert.service.services.resources.ConcertResource;
 import nz.ac.auckland.concert.service.services.resources.PerformerResource;
@@ -34,7 +34,7 @@ public class ConcertApplication extends Application {
 
         _persistenceManager = PersistenceManager.instance();
 
-        this.clearUsers();
+        this.clearDB();
     }
 
     @Override
@@ -47,7 +47,7 @@ public class ConcertApplication extends Application {
         return _singletons;
     }
 
-    private void clearUsers () {
+    private void clearDB() {
         EntityManager em = _persistenceManager.createEntityManager();
 
         try {
@@ -61,12 +61,20 @@ public class ConcertApplication extends Application {
                     .createQuery("SELECT s FROM Seat s", Seat.class)
                     .getResultList();
 
+            List<CreditCard> creditCards = em
+                    .createQuery("SELECT c FROM CreditCard c", CreditCard.class)
+                    .getResultList();
+
             for (User u : users) {
                 em.remove(u);
             }
 
             for(Seat s: seats) {
                 em.remove(s);
+            }
+
+            for (CreditCard c : creditCards) {
+                em.remove(c);
             }
 
             em.flush();

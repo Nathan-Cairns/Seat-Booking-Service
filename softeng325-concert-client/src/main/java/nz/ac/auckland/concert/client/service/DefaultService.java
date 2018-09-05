@@ -41,6 +41,7 @@ public class DefaultService implements ConcertService {
     private static final String BOOKINGS_SERVICE = WEB_SERVICE_URI + "/bookings";
     private static final String RESERVATION_SERVICE = BOOKINGS_SERVICE + "/reserve";
     private static final String BOOKING_CONFIRMATION_SERVICE = BOOKINGS_SERVICE + "/book";
+    private static final String CREDIT_CARD_SERVICE = USER_SERVICE + "/credit_card";
 
     /* AWS */
 
@@ -295,11 +296,41 @@ public class DefaultService implements ConcertService {
 
     @Override
     public void registerCreditCard(CreditCardDTO creditCard) throws ServiceException {
-        // Todo
+        Client client = ClientBuilder.newClient();
+        Response response;
+
+        try {
+            if (_authToken == null) {
+                throw new ServiceException(Messages.UNAUTHENTICATED_REQUEST);
+            }
+
+            Builder builder = client.target(CREDIT_CARD_SERVICE).request()
+                    .accept(MediaType.APPLICATION_XML);
+
+            response = builder
+                    .cookie("AuthToken", _authToken.getValue())
+                    .post(Entity.entity(creditCard, MediaType.APPLICATION_XML));
+
+            // Throw appropriate exception baseed on response
+            if (response.getStatus() != Response.Status.ACCEPTED.getStatusCode()) {
+                _logger.debug(String.valueOf(response.getStatus()));
+                throw new ServiceException(response.readEntity(String.class));
+            }
+
+        } catch (Exception e) {
+            if (e instanceof  ServiceException) {
+                throw e;
+            } else {
+                throw new ServiceException(Messages.SERVICE_COMMUNICATION_ERROR);
+            }
+        } finally {
+            client.close();
+        }
     }
 
     @Override
     public Set<BookingDTO> getBookings() throws ServiceException {
+        // TODO
         return null;
     }
 }

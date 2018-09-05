@@ -20,7 +20,7 @@ public class User {
     @Column(name="LAST_NAME", nullable = false)
     private String lastName;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name="CREDIT_CARD")
     private CreditCard creditCard;
 
