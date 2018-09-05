@@ -1,6 +1,7 @@
 package nz.ac.auckland.concert.service.services.resources;
 
 import nz.ac.auckland.concert.common.dto.ConcertDTO;
+import nz.ac.auckland.concert.common.message.Messages;
 import nz.ac.auckland.concert.service.domain.Concert;
 import nz.ac.auckland.concert.service.mappers.ConcertMapper;
 import nz.ac.auckland.concert.service.services.PersistenceManager;
@@ -52,7 +53,7 @@ public class ConcertResource {
             _logger.debug("Successfully retrieved all concerts");
             return Response.ok(entity).build();
         } catch (Exception e) {
-            return Response.serverError().build();
+            return Response.serverError().entity(Messages.SERVICE_COMMUNICATION_ERROR).build();
         } finally {
             em.close();
         }
@@ -83,7 +84,7 @@ public class ConcertResource {
             _logger.debug("Successfully found concert with id: " + id);
             return Response.ok(concertDTO).build();
         } catch (Exception e) {
-            return Response.serverError().build();
+            return Response.serverError().entity(Messages.SERVICE_COMMUNICATION_ERROR).build();
         } finally {
             em.close();
         }

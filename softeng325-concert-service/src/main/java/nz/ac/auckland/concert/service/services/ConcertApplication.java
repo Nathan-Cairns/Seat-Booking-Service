@@ -1,6 +1,7 @@
 package nz.ac.auckland.concert.service.services;
 
 import nz.ac.auckland.concert.service.domain.CreditCard;
+import nz.ac.auckland.concert.service.domain.Reservation;
 import nz.ac.auckland.concert.service.domain.Seat;
 import nz.ac.auckland.concert.service.services.resources.ConcertResource;
 import nz.ac.auckland.concert.service.services.resources.PerformerResource;
@@ -65,6 +66,10 @@ public class ConcertApplication extends Application {
                     .createQuery("SELECT c FROM CreditCard c", CreditCard.class)
                     .getResultList();
 
+            List<Reservation> reservations = em
+                    .createQuery("SELECT r FROM Reservations r", Reservation.class)
+                    .getResultList();
+
             for (User u : users) {
                 em.remove(u);
             }
@@ -75,6 +80,10 @@ public class ConcertApplication extends Application {
 
             for (CreditCard c : creditCards) {
                 em.remove(c);
+            }
+
+            for (Reservation r : reservations) {
+                em.remove(r);
             }
 
             em.flush();

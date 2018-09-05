@@ -1,5 +1,6 @@
 package nz.ac.auckland.concert.service.services.resources;
 
+import nz.ac.auckland.concert.common.dto.BookingDTO;
 import nz.ac.auckland.concert.common.dto.ReservationDTO;
 import nz.ac.auckland.concert.common.dto.ReservationRequestDTO;
 import nz.ac.auckland.concert.common.dto.SeatDTO;
@@ -22,11 +23,9 @@ import org.slf4j.LoggerFactory;
 
 import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.CookieParam;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.time.LocalDateTime;
@@ -50,6 +49,58 @@ public class BookingResource {
 
     public BookingResource() {
         _persistenceManager = PersistenceManager.instance();
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_XML)
+    public Response getBookings(@CookieParam("AuthToken") Cookie authToken) {
+        EntityManager em = _persistenceManager.createEntityManager();
+
+        try {
+            em.getTransaction().begin();
+            // Check auth token is not null
+            if (authToken == null) {
+                _logger.debug("No auth token");
+                return Response
+                        .status(Response.Status.UNAUTHORIZED)
+                        .entity(Messages.UNAUTHENTICATED_REQUEST)
+                        .build();
+            }
+
+            // Check there is a user with auth token
+            User user = em.createQuery("SELECT u from User u WHERE u.authToken = :token", User.class)
+                    .setParameter("token", authToken.getValue()).getSingleResult();
+
+            _logger.debug("Getting bookings for user: " + user.getUsername());
+
+            if (user == null) {
+                _logger.debug("No user corresponding to auth token");
+                return Response
+                        .status(Response.Status.UNAUTHORIZED)
+                        .entity(Messages.BAD_AUTHENTICATON_TOKEN)
+                        .build();
+            }
+
+            List<Reservation> reservations = em
+                    .createQuery("SELECT r FROM Reservation r WHERE r.user.username = :username", Reservation.class)
+                    .setParameter("username", user.getUsername())
+                    .getResultList();
+
+            Set<BookingDTO> bookingDTOS = reservations.stream().filter(Reservation::getConfirmed)
+                    .map(ReservationMapper::reservationDomainToBookingDTO).collect(Collectors.toSet());
+
+            GenericEntity<Set<BookingDTO>> genericEntity = new GenericEntity<Set<BookingDTO>>(bookingDTOS) {};
+
+            em.getTransaction().commit();
+
+            return Response
+                    .ok(genericEntity)
+                    .build();
+        } catch (Exception e) {
+            return Response.serverError().entity(Messages.SERVICE_COMMUNICATION_ERROR).build();
+        } finally {
+            em.close();
+        }
     }
 
     @POST
@@ -220,7 +271,7 @@ public class BookingResource {
         } catch (Exception e) {
             _logger.debug(e.getMessage());
             e.printStackTrace();
-            return Response.serverError().build();
+            return Response.serverError().entity(Messages.SERVICE_COMMUNICATION_ERROR).build();
         } finally {
             em.close();
         }
@@ -262,7 +313,7 @@ public class BookingResource {
             // TODO return response
             return null;
         } catch (Exception e) {
-            return Response.serverError().build();
+            return Response.serverError().entity(Messages.SERVICE_COMMUNICATION_ERROR).build();
         } finally {
             em.close();
         }

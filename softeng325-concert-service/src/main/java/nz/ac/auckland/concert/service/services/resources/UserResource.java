@@ -58,7 +58,7 @@ public class UserResource {
             _logger.debug("Retrieved user with id: " + id);
             return Response.ok(userDTO).build();
         } catch (Exception e) {
-            return Response.serverError().build();
+            return Response.serverError().entity(Messages.SERVICE_COMMUNICATION_ERROR).build();
         } finally {
             em.close();
         }
@@ -114,7 +114,7 @@ public class UserResource {
                     .cookie(new NewCookie("AuthToken", user.getAuthToken()))
                     .build();
         } catch (Exception e) {
-            return Response.serverError().build();
+            return Response.serverError().entity(Messages.SERVICE_COMMUNICATION_ERROR).build();
         } finally {
             em.close();
         }
@@ -178,7 +178,7 @@ public class UserResource {
                     .cookie(new NewCookie("AuthToken", user.getAuthToken()))
                     .build();
         } catch (Exception e) {
-            return Response.serverError().build();
+            return Response.serverError().entity(Messages.SERVICE_COMMUNICATION_ERROR).build();
         } finally {
             em.close();
         }
@@ -230,7 +230,7 @@ public class UserResource {
 
             return Response.accepted().build();
         } catch (Exception e) {
-            return Response.serverError().build();
+            return Response.serverError().entity(Messages.SERVICE_COMMUNICATION_ERROR).build();
         } finally {
             em.close();
         }

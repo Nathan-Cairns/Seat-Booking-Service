@@ -1,8 +1,10 @@
 package nz.ac.auckland.concert.service.mappers;
 
+import nz.ac.auckland.concert.common.dto.BookingDTO;
 import nz.ac.auckland.concert.common.dto.ReservationDTO;
 import nz.ac.auckland.concert.common.dto.ReservationRequestDTO;
 import nz.ac.auckland.concert.common.dto.SeatDTO;
+import nz.ac.auckland.concert.service.domain.Concert;
 import nz.ac.auckland.concert.service.domain.Reservation;
 import nz.ac.auckland.concert.service.domain.Seat;
 
@@ -16,6 +18,18 @@ public class ReservationMapper {
                 reservation.getId(),
                 reservationRequestDTO,
                 generateDTOSeats(reservation.getSeats())
+        );
+    }
+
+    public static BookingDTO reservationDomainToBookingDTO(Reservation reservation) {
+        Concert concert = reservation.getConcert();
+
+        return new BookingDTO(
+                concert.getId(),
+                concert.getTitle(),
+                reservation.getDateTime(),
+                generateDTOSeats(reservation.getSeats()),
+                reservation.getPriceBand()
         );
     }
 

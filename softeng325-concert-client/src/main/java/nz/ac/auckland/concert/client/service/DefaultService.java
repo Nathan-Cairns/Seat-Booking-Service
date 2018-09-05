@@ -88,11 +88,12 @@ public class DefaultService implements ConcertService {
             _logger.debug("Making concerts get request...");
             response = builder.get();
 
-            Set<ConcertDTO> concertDTOS = response.readEntity(new GenericType<Set<ConcertDTO>>() {
-            });
+            if (response.getStatus() != Response.Status.OK.getStatusCode()) {
+                throw new ServiceException(response.readEntity(String.class));
+            }
 
             _logger.debug("Successfully retrieved and unmarshalled concerts from server.");
-            return concertDTOS;
+            return  response.readEntity(new GenericType<Set<ConcertDTO>>() {});
         } catch (Exception e) {
             throw new ServiceException(Messages.SERVICE_COMMUNICATION_ERROR);
         } finally {
@@ -112,11 +113,12 @@ public class DefaultService implements ConcertService {
             _logger.debug("Making performers get request...");
             response = builder.get();
 
-            Set<PerformerDTO> performerDTOList = response.readEntity(new GenericType<Set<PerformerDTO>>() {
-            });
+            if (response.getStatus() != Response.Status.OK.getStatusCode()) {
+                throw new ServiceException(response.readEntity(String.class));
+            }
 
             _logger.debug("Successfully retrieved and unmarshalled performers from server.");
-            return performerDTOList;
+            return response.readEntity(new GenericType<Set<PerformerDTO>>() {});
         } catch (Exception e) {
             throw new ServiceException(Messages.SERVICE_COMMUNICATION_ERROR);
         } finally {
@@ -330,7 +332,32 @@ public class DefaultService implements ConcertService {
 
     @Override
     public Set<BookingDTO> getBookings() throws ServiceException {
-        // TODO
-        return null;
+        Client client = ClientBuilder.newClient();
+        Response response;
+
+        try {
+            _logger.debug("Getting bookings...");
+            Builder builder = client.target(BOOKINGS_SERVICE).request()
+                    .accept(MediaType.APPLICATION_XML);
+
+            response = builder
+                    .cookie("AuthToken", _authToken.getValue())
+                    .get();
+
+            if (response.getStatus() != Response.Status.OK.getStatusCode()) {
+                _logger.debug(String.valueOf(response.getStatus()));
+                throw new ServiceException(response.readEntity(String.class));
+            }
+
+            return response.readEntity(new GenericType<Set<BookingDTO>>(){});
+        } catch (Exception e) {
+            if (e instanceof ServiceException) {
+                throw e;
+            } else {
+                throw new ServiceException(Messages.SERVICE_COMMUNICATION_ERROR);
+            }
+        } finally {
+            client.close();
+        }
     }
 }

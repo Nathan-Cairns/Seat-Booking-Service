@@ -1,6 +1,7 @@
 package nz.ac.auckland.concert.service.services.resources;
 
 import nz.ac.auckland.concert.common.dto.PerformerDTO;
+import nz.ac.auckland.concert.common.message.Messages;
 import nz.ac.auckland.concert.service.domain.Performer;
 import nz.ac.auckland.concert.service.mappers.PerformerMapper;
 import nz.ac.auckland.concert.service.services.PersistenceManager;
@@ -53,7 +54,7 @@ public class PerformerResource {
             _logger.debug("Successfully retrieved performers");
             return Response.ok(entity).build();
         } catch (Exception e) {
-            return Response.serverError().build();
+            return Response.serverError().entity(Messages.SERVICE_COMMUNICATION_ERROR).build();
         } finally {
             em.close();
         }
@@ -84,7 +85,7 @@ public class PerformerResource {
             _logger.debug("Retrieved performer with id: " + id);
             return Response.ok(performerDTO).build();
         } catch (Exception e) {
-            return Response.serverError().build();
+            return Response.serverError().entity(Messages.SERVICE_COMMUNICATION_ERROR).build();
         } finally {
             em.close();
         }
