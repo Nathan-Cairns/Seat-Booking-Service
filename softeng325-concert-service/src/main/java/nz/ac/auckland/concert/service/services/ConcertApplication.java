@@ -67,7 +67,7 @@ public class ConcertApplication extends Application {
                     .getResultList();
 
             List<Reservation> reservations = em
-                    .createQuery("SELECT r FROM Reservations r", Reservation.class)
+                    .createQuery("SELECT r FROM Reservation r", Reservation.class)
                     .getResultList();
 
             for (User u : users) {
