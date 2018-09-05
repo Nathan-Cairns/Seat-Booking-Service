@@ -29,6 +29,7 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -309,9 +310,45 @@ public class BookingResource {
                         .build();
             }
 
+            // Doesn't have a credit card
+            if (user.getCreditCard() == null) {
+                return Response
+                        .status(Response.Status.PAYMENT_REQUIRED)
+                        .entity(Messages.CREDIT_CARD_NOT_REGISTERED)
+                        .build();
+            }
+
+            Reservation reservation = em
+                    .createQuery("SELECT r FROM Reservation r WHERE r.id = :id", Reservation.class)
+                    .setParameter("id", reservationDTO.getId())
+                    .getSingleResult();
+
+            List<Seat> seats = new ArrayList<>();
+            for (Seat seat : reservation.getSeats()) {
+                if (seat.getTimeStamp().isAfter(seat.getTimeStamp()
+                        .plusSeconds(SeatUtility.RESERVATION_EXPIRY_TIME_IN_SECONDS))) {
+                    seat.setSeatStatus(SeatStatus.BOOKED);
+                    seats.add(seat);
+                } else {
+                    return Response
+                            .status(Response.Status.REQUEST_TIMEOUT)
+                            .entity(Messages.EXPIRED_RESERVATION)
+                            .build();
+                }
+            }
+
+            // Merge the booked seats
+            for (Seat s : seats) {
+                em.merge(s);
+            }
+
+            // Merge confirmed reservation
+            reservation.setConfirmed(true);
+            em.merge(reservation);
+
             em.getTransaction().commit();
-            // TODO return response
-            return null;
+
+            return Response.ok().build();
         } catch (Exception e) {
             return Response.serverError().entity(Messages.SERVICE_COMMUNICATION_ERROR).build();
         } finally {

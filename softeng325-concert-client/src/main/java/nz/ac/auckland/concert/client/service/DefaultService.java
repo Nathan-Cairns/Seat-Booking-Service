@@ -293,7 +293,38 @@ public class DefaultService implements ConcertService {
 
     @Override
     public void confirmReservation(ReservationDTO reservation) throws ServiceException {
-        // Todo
+        Client client = ClientBuilder.newClient();
+        Response response;
+
+        try {
+            if (_authToken == null) {
+                throw new ServiceException(Messages.UNAUTHENTICATED_REQUEST);
+            }
+
+            Builder builder = client.target(BOOKING_CONFIRMATION_SERVICE).request()
+                    .accept(MediaType.APPLICATION_XML);
+
+            _logger.debug("Making reservation confirmation request");
+
+            response = builder
+                    .cookie("AuthToken", _authToken.getValue())
+                    .post(Entity.entity(reservation, MediaType.APPLICATION_XML));
+
+            if (response.getStatus() != Response.Status.OK.getStatusCode()) {
+                _logger.debug(String.valueOf(response.getStatus()));
+                throw new ServiceException(response.readEntity(String.class));
+            }
+
+            _logger.debug("Successfully booked tickets!");
+        } catch (Exception e) {
+            if (e instanceof ServiceException) {
+                throw e;
+            } else {
+                throw new ServiceException(Messages.SERVICE_COMMUNICATION_ERROR);
+            }
+        } finally {
+            client.close();
+        }
     }
 
     @Override
