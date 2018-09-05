@@ -45,6 +45,10 @@ public class Seat implements Serializable {
     @Enumerated(EnumType.STRING)
     private PriceBand priceBand;
 
+    @Column(name = "TIME_STAMP")
+    @Convert(converter = LocalDateTimeConverter.class)
+    private LocalDateTime timeStamp;
+
     public Seat() {}
 
     public Seat(Concert concert, LocalDateTime dateTime, SeatRow seatRow, SeatNumber seatNumber) {
@@ -110,5 +114,13 @@ public class Seat implements Serializable {
 
     public void setPriceBand(PriceBand priceBand) {
         this.priceBand = priceBand;
+    }
+
+    public LocalDateTime getTimeStamp() {
+        return timeStamp;
+    }
+
+    public void setTimeStamp(LocalDateTime timeStamp) {
+        this.timeStamp = timeStamp;
     }
 }

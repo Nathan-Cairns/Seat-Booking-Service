@@ -274,8 +274,7 @@ public class DefaultService implements ConcertService {
                 throw new ServiceException(response.readEntity(String.class));
             }
 
-            ReservationDTO reservationDTO = response.readEntity(ReservationDTO.class);
-            return reservationDTO;
+            return response.readEntity(ReservationDTO.class);
         } catch (Exception e) {
             if (e instanceof ServiceException) {
                 throw e;

@@ -5,6 +5,8 @@ import nz.ac.auckland.concert.common.types.SeatRow;
 
 public class SeatUtility {
 
+    public static final int RESERVATION_EXPIRY_TIME_IN_SECONDS = 5;
+
     /**
      * Helper method used for determining price band based on seat row.
      *

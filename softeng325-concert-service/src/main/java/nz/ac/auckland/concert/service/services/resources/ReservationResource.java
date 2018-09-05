@@ -15,6 +15,7 @@ import nz.ac.auckland.concert.service.mappers.ReservationMapper;
 import nz.ac.auckland.concert.service.mappers.SeatMapper;
 import nz.ac.auckland.concert.service.services.PersistenceManager;
 import nz.ac.auckland.concert.service.util.TheatreUtility;
+import nz.ac.auckland.concert.utility.SeatUtility;
 import nz.ac.auckland.concert.utility.TheatreLayout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +29,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -130,8 +132,17 @@ public class ReservationResource {
                     }
                 }
             } else {
-                // TODO
-                // Free seats which have been held for too long???
+                _logger.debug("Freeing expired seats");
+                for (Seat s : seats) {
+                    if (s.getSeatStatus().equals(SeatStatus.PENDING)) {
+                        if (s.getTimeStamp().isAfter(s.getTimeStamp()
+                                .plusSeconds(SeatUtility.RESERVATION_EXPIRY_TIME_IN_SECONDS))) {
+                            _logger.debug("Freeing up seat: " + s.getSeatNumber() + s.getSeatRow());
+                            s.setSeatStatus(SeatStatus.FREE);
+                            em.merge(s);
+                        }
+                    }
+                }
             }
             // Get list of all not available seats
             List<Seat> unavailableSeats = em.createQuery("SELECT s FROM Seat s WHERE s.concert.id = :cid AND " +
@@ -181,8 +192,10 @@ public class ReservationResource {
                         .setParameter("number", s.getNumber())
                         .getSingleResult();
 
+                seatToReserve.setTimeStamp(LocalDateTime.now());
+
                 seatToReserve.setSeatStatus(SeatStatus.PENDING);
-                em.persist(seatToReserve);
+                em.merge(seatToReserve);
 
                 pendingSeats.add(seatToReserve);
             }
