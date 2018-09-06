@@ -3,10 +3,7 @@ package nz.ac.auckland.concert.service.services;
 import nz.ac.auckland.concert.service.domain.CreditCard;
 import nz.ac.auckland.concert.service.domain.Reservation;
 import nz.ac.auckland.concert.service.domain.Seat;
-import nz.ac.auckland.concert.service.services.resources.ConcertResource;
-import nz.ac.auckland.concert.service.services.resources.PerformerResource;
-import nz.ac.auckland.concert.service.services.resources.BookingResource;
-import nz.ac.auckland.concert.service.services.resources.UserResource;
+import nz.ac.auckland.concert.service.services.resources.*;
 import nz.ac.auckland.concert.service.domain.User;
 
 import javax.persistence.EntityManager;
@@ -32,6 +29,7 @@ public class ConcertApplication extends Application {
         _singletons.add(new PerformerResource());
         _singletons.add(new UserResource());
         _singletons.add(new BookingResource());
+        _singletons.add(new NewsItemResource());
 
         _persistenceManager = PersistenceManager.instance();
 

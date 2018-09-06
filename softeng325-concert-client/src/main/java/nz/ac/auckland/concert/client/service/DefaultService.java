@@ -20,13 +20,14 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 
-public class DefaultService implements ConcertService {
+public class DefaultService implements ConcertService, NewsItemService {
 
 
     /*** MACROS ***/
@@ -42,6 +43,7 @@ public class DefaultService implements ConcertService {
     private static final String RESERVATION_SERVICE = BOOKINGS_SERVICE + "/reserve";
     private static final String BOOKING_CONFIRMATION_SERVICE = BOOKINGS_SERVICE + "/book";
     private static final String CREDIT_CARD_SERVICE = USER_SERVICE + "/credit_card";
+    private static final String NEWS_ITEM_SERVICE = WEB_SERVICE_URI + "/news_items";
 
     /* AWS */
 
@@ -381,6 +383,58 @@ public class DefaultService implements ConcertService {
             }
 
             return response.readEntity(new GenericType<Set<BookingDTO>>(){});
+        } catch (Exception e) {
+            if (e instanceof ServiceException) {
+                throw e;
+            } else {
+                throw new ServiceException(Messages.SERVICE_COMMUNICATION_ERROR);
+            }
+        } finally {
+            client.close();
+        }
+    }
+
+
+    @Override
+    public void recieveNewsItem() throws ServiceException {
+        Client client = ClientBuilder.newClient();
+        Response response;
+
+        try {
+            WebTarget target = client.target(NEWS_ITEM_SERVICE);
+
+            target.request()
+                    .async()
+                    .get(new NewsItemCallback(target));
+        } catch (Exception e) {
+            if (e instanceof ServiceException) {
+                throw e;
+            } else {
+                throw new ServiceException(Messages.SERVICE_COMMUNICATION_ERROR);
+            }
+        } finally {
+            client.close();
+        }
+
+    }
+
+    @Override
+    public void cancelNewsItemSub() throws ServiceException{
+
+    }
+
+    @Override
+    public void newsItemSub() throws ServiceException{
+        Client client = ClientBuilder.newClient();
+        Response response;
+
+        try {
+            if (_authToken == null) {
+                throw new ServiceException(Messages.UNAUTHENTICATED_REQUEST);
+            }
+
+
+
         } catch (Exception e) {
             if (e instanceof ServiceException) {
                 throw e;
