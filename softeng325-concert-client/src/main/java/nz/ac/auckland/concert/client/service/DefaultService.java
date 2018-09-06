@@ -304,7 +304,7 @@ public class DefaultService implements ConcertService {
             Builder builder = client.target(BOOKING_CONFIRMATION_SERVICE).request()
                     .accept(MediaType.APPLICATION_XML);
 
-            _logger.debug("Making reservation confirmation request");
+            _logger.debug("Making reservation confirmation request to " + BOOKING_CONFIRMATION_SERVICE);
 
             response = builder
                     .cookie("AuthToken", _authToken.getValue())

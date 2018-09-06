@@ -188,7 +188,7 @@ public class BookingResource {
                 _logger.debug("Freeing expired seats");
                 for (Seat s : seats) {
                     if (s.getSeatStatus().equals(SeatStatus.PENDING)) {
-                        if (s.getTimeStamp().isAfter(s.getTimeStamp()
+                        if (LocalDateTime.now().isAfter(s.getTimeStamp()
                                 .plusSeconds(SeatUtility.RESERVATION_EXPIRY_TIME_IN_SECONDS))) {
                             _logger.debug("Freeing up seat: " + s.getSeatNumber() + s.getSeatRow());
                             s.setSeatStatus(SeatStatus.FREE);
@@ -247,12 +247,13 @@ public class BookingResource {
                         .getSingleResult();
 
                 seatToReserve.setTimeStamp(LocalDateTime.now());
-
                 seatToReserve.setSeatStatus(SeatStatus.PENDING);
-                em.merge(seatToReserve);
 
                 pendingSeats.add(seatToReserve);
+                em.merge(seatToReserve);
             }
+
+            _logger.debug(pendingSeats.size() + " Pending seats");
 
             Reservation reservation = new Reservation(
                     user,
@@ -262,7 +263,15 @@ public class BookingResource {
                     reservationRequestDTO.getDate()
             );
 
+            _logger.debug(reservation.getSeats().size() + " Pending seats in res " + reservation.getId());
+
             em.persist(reservation);
+
+            for (Seat seat : pendingSeats) {
+                seat.set_reservation(reservation);
+                em.persist(seat);
+            }
+
             em.getTransaction().commit();
 
             ReservationDTO reservationDTO = ReservationMapper.toDTO(reservation, reservationRequestDTO);
@@ -284,6 +293,8 @@ public class BookingResource {
     public Response makeReservation(ReservationDTO reservationDTO,
                                     @CookieParam("AuthToken") Cookie authToken) {
         EntityManager em = _persistenceManager.createEntityManager();
+
+        _logger.debug("Confirming booking for reservation " + reservationDTO.getId());
 
         try {
 
@@ -318,18 +329,27 @@ public class BookingResource {
                         .build();
             }
 
-            Reservation reservation = em
-                    .createQuery("SELECT r FROM Reservation r WHERE r.id = :id", Reservation.class)
-                    .setParameter("id", reservationDTO.getId())
-                    .getSingleResult();
+            Reservation reservation = em.find(Reservation.class, reservationDTO.getId());
+
+            // Tried to get a reservation which doesnt belong to them
+            if (!reservation.getUser().getUsername().equals(user.getUsername())) {
+                _logger.debug("Reservation does not belong to the user!");
+                return Response
+                        .status(Response.Status.UNAUTHORIZED)
+                        .entity(Messages.BAD_AUTHENTICATON_TOKEN)
+                        .build();
+            }
 
             List<Seat> seats = new ArrayList<>();
+            _logger.debug("Booking " + reservation.getSeats().size() + " seats");
             for (Seat seat : reservation.getSeats()) {
-                if (seat.getTimeStamp().isAfter(seat.getTimeStamp()
+                if (!LocalDateTime.now().isAfter(seat.getTimeStamp()
                         .plusSeconds(SeatUtility.RESERVATION_EXPIRY_TIME_IN_SECONDS))) {
+                    _logger.debug("Booking seat " + seat.getSeatNumber() + seat.getSeatRow());
                     seat.setSeatStatus(SeatStatus.BOOKED);
                     seats.add(seat);
                 } else {
+                    _logger.debug("Seat res timed out!");
                     return Response
                             .status(Response.Status.REQUEST_TIMEOUT)
                             .entity(Messages.EXPIRED_RESERVATION)

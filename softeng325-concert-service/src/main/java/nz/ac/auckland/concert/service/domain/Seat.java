@@ -1,5 +1,6 @@
 package nz.ac.auckland.concert.service.domain;
 
+import nz.ac.auckland.concert.common.dto.SeatDTO;
 import nz.ac.auckland.concert.common.types.PriceBand;
 import nz.ac.auckland.concert.common.types.SeatNumber;
 import nz.ac.auckland.concert.common.types.SeatRow;
@@ -7,6 +8,8 @@ import nz.ac.auckland.concert.common.types.SeatStatus;
 import nz.ac.auckland.concert.service.domain.jpa.LocalDateTimeConverter;
 import nz.ac.auckland.concert.service.domain.jpa.SeatNumberConverter;
 import nz.ac.auckland.concert.utility.SeatUtility;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -47,6 +50,7 @@ public class Seat implements Serializable {
     private LocalDateTime timeStamp;
 
     @ManyToOne
+    @JoinColumn(name="RID")
     private Reservation _reservation;
 
     public Seat() {}
@@ -112,7 +116,42 @@ public class Seat implements Serializable {
         return timeStamp;
     }
 
+    public Reservation get_reservation() {
+        return _reservation;
+    }
+
+    public void set_reservation(Reservation _reservation) {
+        this._reservation = _reservation;
+    }
+
     public void setTimeStamp(LocalDateTime timeStamp) {
         this.timeStamp = timeStamp;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof SeatDTO))
+            return false;
+        if (obj == this)
+            return true;
+
+        Seat rhs = (Seat) obj;
+        return new EqualsBuilder().
+                append(this.seatRow, rhs.seatRow).
+                append(this.seatNumber, rhs.seatNumber).
+                isEquals();
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(17, 31).
+                append(this.seatRow).
+                append(this.seatNumber).
+                hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return this.seatRow + this.seatNumber.toString();
     }
 }

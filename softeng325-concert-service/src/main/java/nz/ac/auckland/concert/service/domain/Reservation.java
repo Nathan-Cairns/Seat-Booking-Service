@@ -2,6 +2,7 @@ package nz.ac.auckland.concert.service.domain;
 
 import nz.ac.auckland.concert.common.types.PriceBand;
 import nz.ac.auckland.concert.service.domain.jpa.LocalDateTimeConverter;
+import nz.ac.auckland.concert.service.domain.jpa.SeatNumberConverter;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
@@ -35,8 +36,9 @@ public class Reservation {
     @Convert(converter = LocalDateTimeConverter.class)
     private LocalDateTime dateTime;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "_reservation")
+    @OneToMany(cascade = CascadeType.PERSIST, orphanRemoval = true, mappedBy = "_reservation")
     @OnDelete(action = OnDeleteAction.CASCADE)
+    @Convert(converter = SeatNumberConverter.class)
     private Set<Seat> seats;
 
     @Column(name = "CONFIRMED", nullable = false)
