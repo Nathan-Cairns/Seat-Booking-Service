@@ -30,6 +30,9 @@ public class User {
     @Column(name="TOKEN_TIME_STAMP")
     private LocalDate authTokenTimeStamp;
 
+    @Column(name = "LAST_READ")
+    private NewsItem lastRead;
+
     public User(){}
 
     public User(String username, String password, String firstName, String lastName) {
@@ -37,6 +40,14 @@ public class User {
         this.password = password;
         this.firstName = firstName;
         this.lastName = lastName;
+    }
+
+    public NewsItem getLastRead() {
+        return lastRead;
+    }
+
+    public void setLastRead(NewsItem lastRead) {
+        this.lastRead = lastRead;
     }
 
     public CreditCard getCreditCard() {

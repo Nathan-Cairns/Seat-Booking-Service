@@ -2,7 +2,9 @@ package nz.ac.auckland.concert.service.services.resources;
 
 import nz.ac.auckland.concert.common.dto.NewsItemDTO;
 import nz.ac.auckland.concert.common.message.Messages;
+import nz.ac.auckland.concert.service.domain.NewsItem;
 import nz.ac.auckland.concert.service.domain.User;
+import nz.ac.auckland.concert.service.mappers.NewsItemMapper;
 import nz.ac.auckland.concert.service.services.PersistenceManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +17,7 @@ import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Path("/news_items")
@@ -61,6 +64,18 @@ public class NewsItemResource {
                         .status(Response.Status.UNAUTHORIZED)
                         .entity(Messages.BAD_AUTHENTICATON_TOKEN)
                         .build();
+            }
+
+            List<NewsItem> newsItems = em.createQuery("SELECT n FROM NewsItem n", NewsItem.class)
+                    .getResultList();
+            boolean after = false;
+            for (NewsItem n : newsItems) {
+                if (after) {
+                    response.resume(NewsItemMapper.toDTO(n));
+                }
+                if (n.getId() == user.getLastRead().getId()) {
+                    after = true;
+                }
             }
 
             this.responseList.put(authToken, response);
@@ -136,6 +151,17 @@ public class NewsItemResource {
 
             for (Cookie authToken : this.responseList.keySet()) {
                 this.responseList.get(authToken).resume(newsItemDTO);
+
+                User user = em.createQuery("SELECT u FROM User u WHERE u.authTokem = :authToken", User.class)
+                        .setParameter("authToken", authToken)
+                        .getSingleResult();
+
+                NewsItem newsItem = em.find(NewsItem.class, newsItemDTO.getId());
+
+                if (user != null) {
+                    user.setLastRead(newsItem);
+                    em.merge(user);
+                }
             }
 
             em.getTransaction().commit();
