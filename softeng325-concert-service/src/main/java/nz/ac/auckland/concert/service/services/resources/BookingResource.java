@@ -287,6 +287,7 @@ public class BookingResource {
 
             em.getTransaction().commit();
         } catch (OptimisticLockException e) {
+            em.close();
             seats = this.bookSeats(reservationDTO);
         } finally {
             em.close();
@@ -301,7 +302,7 @@ public class BookingResource {
      *      representing the reservation just made.
      */
     private ReservationDTO reserveSeatsForRequest(Concert concert, ReservationRequestDTO reservationRequestDTO, User user) {
-        ReservationDTO reservationDTO = null;
+        ReservationDTO reservationDTO;
         EntityManager em = _persistenceManager.createEntityManager();
 
         try {
@@ -383,6 +384,7 @@ public class BookingResource {
             em.getTransaction().commit();
         } catch (OptimisticLockException e) {
             // Failed comitting to db cause incorrect seat version
+            em.close();
             reservationDTO = this.reserveSeatsForRequest(concert, reservationRequestDTO, user);
         } finally {
             em.close();
@@ -434,6 +436,7 @@ public class BookingResource {
             em.getTransaction().commit();
         } catch (OptimisticLockException e) {
             // Failed comitting to db cause incorrect seat version
+            em.close();
             this.initSeats(concert, reservationRequestDTO);
         } finally {
             em.close();
