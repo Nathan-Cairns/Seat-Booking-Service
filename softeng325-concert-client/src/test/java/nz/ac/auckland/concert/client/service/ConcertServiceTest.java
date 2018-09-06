@@ -341,6 +341,7 @@ public class ConcertServiceTest {
 			BookingDTO bookingDTO = bookings.iterator().next();
 			assertEquals(new Long(1), bookingDTO.getConcertId());
 			assertEquals(dateTime, bookingDTO.getDateTime());
+
 			assertEquals(reservation.getSeats(), bookingDTO.getSeats());
 			assertEquals(PriceBand.PriceBandC, bookingDTO.getPriceBand());
 		} catch(ServiceException e) {

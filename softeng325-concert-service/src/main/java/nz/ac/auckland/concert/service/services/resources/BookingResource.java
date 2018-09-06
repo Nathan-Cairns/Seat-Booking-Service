@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
+import javax.persistence.OptimisticLockException;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.GenericEntity;
@@ -71,8 +72,6 @@ public class BookingResource {
             // Check there is a user with auth token
             User user = em.createQuery("SELECT u from User u WHERE u.authToken = :token", User.class)
                     .setParameter("token", authToken.getValue()).getSingleResult();
-
-            _logger.debug("Getting bookings for user: " + user.getUsername());
 
             if (user == null) {
                 _logger.debug("No user corresponding to auth token");
@@ -164,123 +163,22 @@ public class BookingResource {
                         .build();
             }
 
-            List<Seat> seats = em.createQuery("SELECT s from Seat s WHERE s.concert.id = :cid " +
-                    "AND s.dateTime = :date", Seat.class)
-                    .setParameter("cid", concert.getId())
-                    .setParameter("date", reservationRequestDTO.getDate())
-                    .setLockMode(LockModeType.OPTIMISTIC)
-                    .getResultList();
+            em.getTransaction().commit();
 
-            // If no seats exist for concert create them
-            if (seats.isEmpty()) {
-                _logger.debug("Setting up seats");
-                for (SeatRow seatRow : SeatRow.values()) {
-                    for (int i = 1; i <= TheatreLayout.getNumberOfSeatsForRow(seatRow); i++) {
-                        Seat seat = new Seat(
-                                concert,
-                                reservationRequestDTO.getDate(),
-                                seatRow,
-                                new SeatNumber(i));
-                        em.persist(seat);
-                    }
-                }
-            } else {
-                _logger.debug("Freeing expired seats");
-                for (Seat s : seats) {
-                    if (s.getSeatStatus().equals(SeatStatus.PENDING)) {
-                        if (LocalDateTime.now().isAfter(s.getTimeStamp()
-                                .plusSeconds(SeatUtility.RESERVATION_EXPIRY_TIME_IN_SECONDS))) {
-                            _logger.debug("Freeing up seat: " + s.getSeatNumber() + s.getSeatRow());
-                            s.setSeatStatus(SeatStatus.FREE);
-                            em.merge(s);
-                        }
-                    }
-                }
-            }
-            // Get list of all not available seats
-            _logger.debug("Get unavailable seats");
-            List<Seat> unavailableSeats = em.createQuery("SELECT s FROM Seat s WHERE s.concert.id = :cid AND " +
-                    "s.dateTime=:date AND s.priceBand = :priceBand AND s.seatStatus = :status " +
-                    "OR s.seatStatus = :status2", Seat.class)
-                    .setParameter("cid", concert.getId())
-                    .setParameter("date", reservationRequestDTO.getDate())
-                    .setParameter("priceBand", reservationRequestDTO.getSeatType())
-                    .setParameter("status", SeatStatus.BOOKED)
-                    .setParameter("status2", SeatStatus.PENDING)
-                    .setLockMode(LockModeType.OPTIMISTIC)
-                    .getResultList();
+            this.initSeats(concert, reservationRequestDTO);
 
-            _logger.debug(unavailableSeats.size() + " unavailable seats");
+            ReservationDTO reservationDTO = this.reserveSeatsForRequest(concert, reservationRequestDTO, user);
 
-            // Convert unavailable seats to DTO
-            Set<SeatDTO> unavailableSeatDTOList =
-                    unavailableSeats.stream().map(SeatMapper::toDTO).collect(Collectors.toSet());
-
-            _logger.debug("Size of dto unavailable seats: " + unavailableSeatDTOList.size());
-
-            // Get available seats
-            Set<SeatDTO> availableSeats = TheatreUtility.findAvailableSeats(
-                    reservationRequestDTO.getNumberOfSeats(),
-                    reservationRequestDTO.getSeatType(),
-                    unavailableSeatDTOList);
-
-            // Check if enough seats are available
-            if (availableSeats.isEmpty() || availableSeats.size() < reservationRequestDTO.getNumberOfSeats()) {
-                _logger.debug("Not enough seats available");
+            if (reservationDTO == null) {
                 return Response
                         .status(Response.Status.REQUESTED_RANGE_NOT_SATISFIABLE)
                         .entity(Messages.INSUFFICIENT_SEATS_AVAILABLE_FOR_RESERVATION)
                         .build();
             }
-            // Set status to pending for required amount of seats
-            _logger.debug("Retrieving " + reservationRequestDTO.getNumberOfSeats() + " seats");
-            _logger.debug(availableSeats.size() + " available seats");
-            Set<Seat> pendingSeats = new HashSet<>();
-            for (SeatDTO s : availableSeats) {
-                _logger.debug("Adding pending seat with row " + s.getRow() + " and number " + s.getNumber());
-                Seat seatToReserve = em.createQuery("SELECT s FROM Seat s WHERE s.concert.id = :cid " +
-                        "AND s.dateTime = :date AND s.seatRow = :row AND s.seatNumber = :number", Seat.class)
-                        .setParameter("cid", concert.getId())
-                        .setParameter("date", reservationRequestDTO.getDate())
-                        .setParameter("row", s.getRow())
-                        .setParameter("number", s.getNumber())
-                        .getSingleResult();
-
-                seatToReserve.setTimeStamp(LocalDateTime.now());
-                seatToReserve.setSeatStatus(SeatStatus.PENDING);
-
-                pendingSeats.add(seatToReserve);
-                em.merge(seatToReserve);
-            }
-
-            _logger.debug(pendingSeats.size() + " Pending seats");
-
-            Reservation reservation = new Reservation(
-                    user,
-                    concert,
-                    reservationRequestDTO.getSeatType(),
-                    pendingSeats,
-                    reservationRequestDTO.getDate()
-            );
-
-            _logger.debug(reservation.getSeats().size() + " Pending seats in res " + reservation.getId());
-
-            em.persist(reservation);
-
-            for (Seat seat : pendingSeats) {
-                seat.set_reservation(reservation);
-                em.persist(seat);
-            }
-
-            em.getTransaction().commit();
-
-            ReservationDTO reservationDTO = ReservationMapper.toDTO(reservation, reservationRequestDTO);
             return Response
                     .accepted(reservationDTO)
                     .build();
         } catch (Exception e) {
-            _logger.debug(e.getMessage());
-            e.printStackTrace();
             return Response.serverError().entity(Messages.SERVICE_COMMUNICATION_ERROR).build();
         } finally {
             em.close();
@@ -341,6 +239,8 @@ public class BookingResource {
             }
 
             List<Seat> seats = new ArrayList<>();
+
+
             _logger.debug("Booking " + reservation.getSeats().size() + " seats");
             for (Seat seat : reservation.getSeats()) {
                 if (!LocalDateTime.now().isAfter(seat.getTimeStamp()
@@ -371,6 +271,164 @@ public class BookingResource {
             return Response.ok().build();
         } catch (Exception e) {
             return Response.serverError().entity(Messages.SERVICE_COMMUNICATION_ERROR).build();
+        } finally {
+            em.close();
+        }
+    }
+
+    private void bookSeats() {
+        EntityManager em = _persistenceManager.createEntityManager();
+
+        try {
+
+        } catch (OptimisticLockException e) {
+            this.bookSeats();
+        } finally {
+            em.close();
+        }
+    }
+
+    /**
+     * Places reservations on some seats
+     *
+     * @return Null if not seats could be booked due to insufficient seats, Otherwise returns a reservationDTO object
+     *      representing the reservation just made.
+     */
+    private ReservationDTO reserveSeatsForRequest(Concert concert, ReservationRequestDTO reservationRequestDTO, User user) {
+        ReservationDTO reservationDTO = null;
+        EntityManager em = _persistenceManager.createEntityManager();
+
+        try {
+            em.getTransaction().begin();
+
+            // Get list of all not available seats
+            _logger.debug("Get unavailable seats");
+            List<Seat> unavailableSeats = em.createQuery("SELECT s FROM Seat s WHERE s.concert.id = :cid AND " +
+                    "s.dateTime=:date AND s.priceBand = :priceBand AND s.seatStatus = :status " +
+                    "OR s.seatStatus = :status2", Seat.class)
+                    .setParameter("cid", concert.getId())
+                    .setParameter("date", reservationRequestDTO.getDate())
+                    .setParameter("priceBand", reservationRequestDTO.getSeatType())
+                    .setParameter("status", SeatStatus.BOOKED)
+                    .setParameter("status2", SeatStatus.PENDING)
+                    .setLockMode(LockModeType.OPTIMISTIC)
+                    .getResultList();
+
+            _logger.debug(unavailableSeats.size() + " unavailable seats");
+
+            // Convert unavailable seats to DTO
+            Set<SeatDTO> unavailableSeatDTOList =
+                    unavailableSeats.stream().map(SeatMapper::toDTO).collect(Collectors.toSet());
+
+            _logger.debug("Size of dto unavailable seats: " + unavailableSeatDTOList.size());
+
+            // Get available seats
+            Set<SeatDTO> availableSeats = TheatreUtility.findAvailableSeats(
+                    reservationRequestDTO.getNumberOfSeats(),
+                    reservationRequestDTO.getSeatType(),
+                    unavailableSeatDTOList);
+
+            // Check if enough seats are available
+            if (availableSeats.isEmpty() || availableSeats.size() < reservationRequestDTO.getNumberOfSeats()) {
+                _logger.debug("Not enough seats available");
+                return null;
+            }
+            // Set status to pending for required amount of seats
+            _logger.debug("Retrieving " + reservationRequestDTO.getNumberOfSeats() + " seats");
+            _logger.debug(availableSeats.size() + " available seats");
+            Set<Seat> pendingSeats = new HashSet<>();
+            for (SeatDTO s : availableSeats) {
+                _logger.debug("Adding pending seat with row " + s.getRow() + " and number " + s.getNumber());
+                Seat seatToReserve = em.createQuery("SELECT s FROM Seat s WHERE s.concert.id = :cid " +
+                        "AND s.dateTime = :date AND s.seatRow = :row AND s.seatNumber = :number", Seat.class)
+                        .setParameter("cid", concert.getId())
+                        .setParameter("date", reservationRequestDTO.getDate())
+                        .setParameter("row", s.getRow())
+                        .setParameter("number", s.getNumber())
+                        .getSingleResult();
+
+                seatToReserve.setTimeStamp(LocalDateTime.now());
+                seatToReserve.setSeatStatus(SeatStatus.PENDING);
+
+                pendingSeats.add(seatToReserve);
+                em.merge(seatToReserve);
+            }
+
+            _logger.debug(pendingSeats.size() + " Pending seats");
+
+            Reservation reservation = new Reservation(
+                    user,
+                    concert,
+                    reservationRequestDTO.getSeatType(),
+                    pendingSeats,
+                    reservationRequestDTO.getDate()
+            );
+
+            _logger.debug(reservation.getSeats().size() + " Pending seats in res " + reservation.getId());
+
+            em.persist(reservation);
+
+            for (Seat seat : pendingSeats) {
+                seat.set_reservation(reservation);
+                em.persist(seat);
+            }
+
+            reservationDTO = ReservationMapper.toDTO(reservation, reservationRequestDTO);
+            em.getTransaction().commit();
+        } catch (OptimisticLockException e) {
+            // Failed comitting to db cause incorrect seat version
+            reservationDTO = this.reserveSeatsForRequest(concert, reservationRequestDTO, user);
+        } finally {
+            em.close();
+        }
+
+        return reservationDTO;
+    }
+
+    /**
+     * Makes sure seats are initialised
+     */
+    private void initSeats (Concert concert, ReservationRequestDTO reservationRequestDTO) {
+        EntityManager em = _persistenceManager.createEntityManager();
+        try {
+            em.getTransaction().begin();
+            List<Seat> seats = em.createQuery("SELECT s from Seat s WHERE s.concert.id = :cid " +
+                    "AND s.dateTime = :date", Seat.class)
+                    .setParameter("cid", concert.getId())
+                    .setParameter("date", reservationRequestDTO.getDate())
+                    .setLockMode(LockModeType.OPTIMISTIC)
+                    .getResultList();
+
+            // If no seats exist for concert create them
+            if (seats.isEmpty()) {
+                _logger.debug("Setting up seats");
+                for (SeatRow seatRow : SeatRow.values()) {
+                    for (int i = 1; i <= TheatreLayout.getNumberOfSeatsForRow(seatRow); i++) {
+                        Seat seat = new Seat(
+                                concert,
+                                reservationRequestDTO.getDate(),
+                                seatRow,
+                                new SeatNumber(i));
+                        em.persist(seat);
+                    }
+                }
+            } else {
+                _logger.debug("Freeing expired seats");
+                for (Seat s : seats) {
+                    if (s.getSeatStatus().equals(SeatStatus.PENDING)) {
+                        if (LocalDateTime.now().isAfter(s.getTimeStamp()
+                                .plusSeconds(SeatUtility.RESERVATION_EXPIRY_TIME_IN_SECONDS))) {
+                            _logger.debug("Freeing up seat: " + s.getSeatNumber() + s.getSeatRow());
+                            s.setSeatStatus(SeatStatus.FREE);
+                            em.merge(s);
+                        }
+                    }
+                }
+            }
+            em.getTransaction().commit();
+        } catch (OptimisticLockException e) {
+            // Failed comitting to db cause incorrect seat version
+            this.initSeats(concert, reservationRequestDTO);
         } finally {
             em.close();
         }

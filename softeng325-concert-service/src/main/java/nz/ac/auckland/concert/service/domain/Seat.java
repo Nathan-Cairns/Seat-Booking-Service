@@ -19,6 +19,9 @@ import java.time.LocalDateTime;
 @Table(name = "SEATS")
 public class Seat implements Serializable {
 
+    @Version
+    private int version;
+
     @Id
     @ManyToOne
     private Concert concert;
@@ -62,6 +65,14 @@ public class Seat implements Serializable {
         this.seatNumber = seatNumber;
 
         this.priceBand = SeatUtility.determinePriceBand(this.seatRow);
+    }
+
+    public int getVersion() {
+        return version;
+    }
+
+    public void setVersion(int version) {
+        this.version = version;
     }
 
     public Concert getConcert() {
