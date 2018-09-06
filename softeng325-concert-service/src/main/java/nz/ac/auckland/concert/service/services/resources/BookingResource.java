@@ -227,22 +227,44 @@ public class BookingResource {
                         .build();
             }
 
-            Reservation reservation = em.find(Reservation.class, reservationDTO.getId());
+            List<Seat> seats = this.bookSeats(reservationDTO);
 
-            // Tried to get a reservation which doesnt belong to them
-            if (!reservation.getUser().getUsername().equals(user.getUsername())) {
-                _logger.debug("Reservation does not belong to the user!");
+            if (seats == null || seats.isEmpty()) {
                 return Response
-                        .status(Response.Status.UNAUTHORIZED)
-                        .entity(Messages.BAD_AUTHENTICATON_TOKEN)
+                        .status(Response.Status.REQUEST_TIMEOUT)
+                        .entity(Messages.EXPIRED_RESERVATION)
                         .build();
             }
 
-            List<Seat> seats = new ArrayList<>();
+            return Response.ok().build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Response.serverError().entity(Messages.SERVICE_COMMUNICATION_ERROR).build();
+        } finally {
+            em.close();
+        }
+    }
 
+    /**
+     * Book seats.
+     *
+     * @return List of booked seats. Return null if seats timed out.
+     */
+    private List<Seat> bookSeats(ReservationDTO reservationDTO) {
+        EntityManager em = _persistenceManager.createEntityManager();
+        List<Seat> seats = new ArrayList<>();
 
+        try {
+            em.getTransaction().begin();
+
+            Reservation reservation = em.find(Reservation.class, reservationDTO.getId());
+
+            List<Seat> reservedSeats = em.createQuery("SELECT s FROM Seat s WHERE s._reservation.id = :id", Seat.class)
+                    .setParameter("id", reservation.getId())
+                    .setLockMode(LockModeType.OPTIMISTIC)
+                    .getResultList();
             _logger.debug("Booking " + reservation.getSeats().size() + " seats");
-            for (Seat seat : reservation.getSeats()) {
+            for (Seat seat : reservedSeats) {
                 if (!LocalDateTime.now().isAfter(seat.getTimeStamp()
                         .plusSeconds(SeatUtility.RESERVATION_EXPIRY_TIME_IN_SECONDS))) {
                     _logger.debug("Booking seat " + seat.getSeatNumber() + seat.getSeatRow());
@@ -250,10 +272,7 @@ public class BookingResource {
                     seats.add(seat);
                 } else {
                     _logger.debug("Seat res timed out!");
-                    return Response
-                            .status(Response.Status.REQUEST_TIMEOUT)
-                            .entity(Messages.EXPIRED_RESERVATION)
-                            .build();
+                    return null;
                 }
             }
 
@@ -267,25 +286,12 @@ public class BookingResource {
             em.merge(reservation);
 
             em.getTransaction().commit();
-
-            return Response.ok().build();
-        } catch (Exception e) {
-            return Response.serverError().entity(Messages.SERVICE_COMMUNICATION_ERROR).build();
-        } finally {
-            em.close();
-        }
-    }
-
-    private void bookSeats() {
-        EntityManager em = _persistenceManager.createEntityManager();
-
-        try {
-
         } catch (OptimisticLockException e) {
-            this.bookSeats();
+            seats = this.bookSeats(reservationDTO);
         } finally {
             em.close();
         }
+        return seats;
     }
 
     /**
