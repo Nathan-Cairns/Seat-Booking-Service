@@ -30,7 +30,8 @@ public class User {
     @Column(name="TOKEN_TIME_STAMP")
     private LocalDate authTokenTimeStamp;
 
-    @Column(name = "LAST_READ")
+    @ManyToOne
+    @JoinColumn(name = "LAST_READ")
     private NewsItem lastRead;
 
     public User(){}
