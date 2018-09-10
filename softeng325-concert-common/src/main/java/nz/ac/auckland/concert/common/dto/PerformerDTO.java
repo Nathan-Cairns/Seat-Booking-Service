@@ -51,7 +51,15 @@ public class PerformerDTO {
 		_genre = genre;
 		_concertIds = new HashSet<Long>(concertIds);
 	}
-	
+
+	public Genre get_genre() {
+		return _genre;
+	}
+
+	public void set_genre(Genre _genre) {
+		this._genre = _genre;
+	}
+
 	public Long getId() {
 		return _id;
 	}

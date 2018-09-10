@@ -32,6 +32,13 @@ public class Performer {
 
     public Performer() {}
 
+    public Performer(Genre genre, String imageName, String name, Set<Concert> concerts) {
+        this.genre = genre;
+        this.imageName = imageName;
+        this.name = name;
+        this.concerts = concerts;
+    }
+
     public long getId() {
         return id;
     }

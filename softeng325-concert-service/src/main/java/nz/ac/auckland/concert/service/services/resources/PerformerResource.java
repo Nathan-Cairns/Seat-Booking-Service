@@ -7,6 +7,7 @@ import nz.ac.auckland.concert.service.mappers.PerformerMapper;
 import nz.ac.auckland.concert.service.services.PersistenceManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.misc.Perf;
 
 import javax.persistence.EntityManager;
 import javax.ws.rs.*;
@@ -15,6 +16,7 @@ import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.net.URI;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,7 +24,7 @@ import java.util.stream.Collectors;
 public class PerformerResource implements SubscriptionResource<PerformerDTO>{
     private PersistenceManager _persistenceManager;
 
-    private static Logger _logger = LoggerFactory
+    private Logger _logger = LoggerFactory
             .getLogger(PerformerResource.class);
 
     public PerformerResource() {
@@ -32,9 +34,33 @@ public class PerformerResource implements SubscriptionResource<PerformerDTO>{
     @POST
     @Consumes(MediaType.APPLICATION_XML)
     public Response createPerformer(PerformerDTO performerDTO) {
+        EntityManager em = this._persistenceManager.createEntityManager();
 
-        this.process(performerDTO);
-        return null;
+         try {
+             em.getTransaction().begin();
+
+             if (em.find(Performer.class, performerDTO.getId()) != null) {
+                this._logger.debug("Performer already exists!");
+                return Response
+                        .status(Response.Status.CONFLICT)
+                        .entity(Messages.CREATE_PERFORMER_ALREADY_EXISTS)
+                        .build();
+             }
+
+             Performer performer = PerformerMapper.toDomain(performerDTO);
+
+             em.persist(performer);
+
+             em.getTransaction().commit();
+             this.process(performerDTO);
+             return Response
+                     .created(URI.create("/performers/" + performer.getId()))
+                     .build();
+        } catch (Exception e) {
+            return Response.serverError().entity(Messages.SERVICE_COMMUNICATION_ERROR).build();
+        } finally {
+            em.close();
+        }
     }
 
     @GET
