@@ -1,5 +1,6 @@
 package nz.ac.auckland.concert.service.services.resources;
 
+import com.sun.jndi.toolkit.url.Uri;
 import nz.ac.auckland.concert.common.dto.NewsItemDTO;
 import nz.ac.auckland.concert.common.message.Messages;
 import nz.ac.auckland.concert.service.domain.NewsItem;
@@ -16,9 +17,8 @@ import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.net.URI;
+import java.util.*;
 
 @Path("/news_items")
 public class NewsItemResource implements SubscriptionResource<NewsItemDTO> {
@@ -37,9 +37,33 @@ public class NewsItemResource implements SubscriptionResource<NewsItemDTO> {
     @POST
     @Consumes({MediaType.APPLICATION_XML})
     public Response createNewsItem(NewsItemDTO newsItemDTO) {
+        EntityManager em = this.persistenceManager.createEntityManager();
 
-        this.process(newsItemDTO);
-        return null;
+        try {
+            em.getTransaction().begin();
+
+            if (em.find(NewsItem.class, newsItemDTO.getId()) != null) {
+                this.logger.debug("News Item with id already exists!");
+                return Response
+                        .status(Response.Status.CONFLICT)
+                        .entity(Messages.CREATE_NEWS_ITEM_ALREADY_EXISTS)
+                        .build();
+            }
+
+            NewsItem newsItem = NewsItemMapper.toDomain(newsItemDTO);
+
+            em.persist(newsItem);
+
+            em.getTransaction().commit();
+            this.process(newsItemDTO);
+            return Response
+                    .created(URI.create("/news_items/" + newsItem.getId()))
+                    .build();
+        } catch (Exception e) {
+            return Response.serverError().entity(Messages.SERVICE_COMMUNICATION_ERROR).build();
+        } finally {
+            em.close();
+        }
     }
 
     @POST

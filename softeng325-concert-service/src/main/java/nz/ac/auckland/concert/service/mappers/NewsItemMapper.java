@@ -12,4 +12,11 @@ public class NewsItemMapper {
                 newsItem.getPubDate()
         );
     }
+    public static NewsItem toDomain(NewsItemDTO newsItemDTO) {
+        return new NewsItem(
+                newsItemDTO.getTitle(),
+                newsItemDTO.getBody(),
+                newsItemDTO.getPubDate()
+        );
+    }
 }
