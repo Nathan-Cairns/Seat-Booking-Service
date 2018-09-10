@@ -27,7 +27,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 
-public class DefaultService implements ConcertService, NewsItemService {
+public class DefaultService implements ConcertService, NewsItemService, PerformerSubscriptionService {
 
 
     /*** MACROS ***/
@@ -394,18 +394,13 @@ public class DefaultService implements ConcertService, NewsItemService {
         }
     }
 
-
     @Override
-    public void recieveNewsItem() throws ServiceException {
+    public void createNewsItem(NewsItemDTO newsItemDTO) throws ServiceException {
         Client client = ClientBuilder.newClient();
         Response response;
 
         try {
-            WebTarget target = client.target(NEWS_ITEM_SERVICE);
-
-            target.request()
-                    .async()
-                    .get(new NewsItemCallback(target));
+            // TODO
         } catch (Exception e) {
             if (e instanceof ServiceException) {
                 throw e;
@@ -415,12 +410,27 @@ public class DefaultService implements ConcertService, NewsItemService {
         } finally {
             client.close();
         }
-
     }
 
     @Override
     public void cancelNewsItemSub() throws ServiceException{
+        Client client = ClientBuilder.newClient();
+        Response response;
 
+        try {
+            if (_authToken == null) {
+                throw new ServiceException(Messages.UNAUTHENTICATED_REQUEST);
+            }
+            // TODO
+        } catch (Exception e) {
+            if (e instanceof ServiceException) {
+                throw e;
+            } else {
+                throw new ServiceException(Messages.SERVICE_COMMUNICATION_ERROR);
+            }
+        } finally {
+            client.close();
+        }
     }
 
     @Override
@@ -432,9 +442,67 @@ public class DefaultService implements ConcertService, NewsItemService {
             if (_authToken == null) {
                 throw new ServiceException(Messages.UNAUTHENTICATED_REQUEST);
             }
+            // TODO
+        } catch (Exception e) {
+            if (e instanceof ServiceException) {
+                throw e;
+            } else {
+                throw new ServiceException(Messages.SERVICE_COMMUNICATION_ERROR);
+            }
+        } finally {
+            client.close();
+        }
+    }
 
+    @Override
+    public void createPerformer(PerformerDTO performerDTO) throws ServiceException {
+        Client client = ClientBuilder.newClient();
+        Response response;
 
+        try {
+            //TODO
+        } catch (Exception e) {
+            if (e instanceof ServiceException) {
+                throw e;
+            } else {
+                throw new ServiceException(Messages.SERVICE_COMMUNICATION_ERROR);
+            }
+        } finally {
+            client.close();
+        }
+    }
 
+    @Override
+    public void cancelPerformerSub() throws ServiceException {
+        Client client = ClientBuilder.newClient();
+        Response response;
+
+        try {
+            if (_authToken == null) {
+                throw new ServiceException(Messages.UNAUTHENTICATED_REQUEST);
+            }
+            // TODO
+        } catch (Exception e) {
+            if (e instanceof ServiceException) {
+                throw e;
+            } else {
+                throw new ServiceException(Messages.SERVICE_COMMUNICATION_ERROR);
+            }
+        } finally {
+            client.close();
+        }
+    }
+
+    @Override
+    public void performerSub() throws ServiceException {
+        Client client = ClientBuilder.newClient();
+        Response response;
+
+        try {
+            if (_authToken == null) {
+                throw new ServiceException(Messages.UNAUTHENTICATED_REQUEST);
+            }
+            //TODO
         } catch (Exception e) {
             if (e instanceof ServiceException) {
                 throw e;

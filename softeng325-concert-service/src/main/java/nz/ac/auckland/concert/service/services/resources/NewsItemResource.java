@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 @Path("/news_items")
-public class NewsItemResource {
+public class NewsItemResource implements SubscriptionResource<NewsItemDTO> {
     private Map<Cookie, AsyncResponse> responseList;
 
     private PersistenceManager persistenceManager;
@@ -35,10 +35,18 @@ public class NewsItemResource {
     }
 
     @POST
+    @Consumes({MediaType.APPLICATION_XML})
+    public Response createNewsItem(NewsItemDTO newsItemDTO) {
+
+        this.process(newsItemDTO);
+        return null;
+    }
+
+    @POST
     @Path("/sub")
     @Consumes(MediaType.APPLICATION_XML)
-    public Response subscribe(@Suspended AsyncResponse response,
-                              @CookieParam("AuthToken") Cookie authToken) {
+    @Override
+    public Response subscribe(@Suspended AsyncResponse response, @CookieParam("AuthToken") Cookie authToken) {
         EntityManager em = this.persistenceManager.createEntityManager();
 
         try {
@@ -97,6 +105,7 @@ public class NewsItemResource {
     @DELETE
     @Path("/sub")
     @Consumes(MediaType.APPLICATION_XML)
+    @Override
     public Response unsubscribe(@CookieParam("AuthToke") Cookie authToken) {
         EntityManager em = this.persistenceManager.createEntityManager();
 
@@ -142,8 +151,7 @@ public class NewsItemResource {
         }
     }
 
-    @POST
-    @Consumes(MediaType.APPLICATION_XML)
+    @Override
     public void process(NewsItemDTO newsItemDTO) {
         EntityManager em = this.persistenceManager.createEntityManager();
         try {

@@ -9,10 +9,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.persistence.EntityManager;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -20,7 +19,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Path("/performers")
-public class PerformerResource {
+public class PerformerResource implements SubscriptionResource<PerformerDTO>{
     private PersistenceManager _persistenceManager;
 
     private static Logger _logger = LoggerFactory
@@ -28,6 +27,14 @@ public class PerformerResource {
 
     public PerformerResource() {
         _persistenceManager = PersistenceManager.instance();
+    }
+
+    @POST
+    @Consumes(MediaType.APPLICATION_XML)
+    public Response createPerformer(PerformerDTO performerDTO) {
+
+        this.process(performerDTO);
+        return null;
     }
 
     @GET
@@ -89,5 +96,20 @@ public class PerformerResource {
         } finally {
             em.close();
         }
+    }
+
+    @Override
+    public Response unsubscribe(Cookie authToken) {
+        return null;
+    }
+
+    @Override
+    public Response subscribe(AsyncResponse response, Cookie authToken) {
+        return null;
+    }
+
+    @Override
+    public void process(PerformerDTO performerDTO) {
+
     }
 }
