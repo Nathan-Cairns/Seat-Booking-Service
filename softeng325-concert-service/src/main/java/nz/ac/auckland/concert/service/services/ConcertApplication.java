@@ -22,10 +22,11 @@ public class ConcertApplication extends Application {
         _classes = new HashSet<>();
         _singletons = new HashSet<>();
 
-        _singletons.add(new ConcertResource());
-        _singletons.add(new PerformerResource());
-        _singletons.add(new UserResource());
-        _singletons.add(new BookingResource());
+        _classes.add(ConcertResource.class);
+        _classes.add(PerformerResource.class);
+        _classes.add(UserResource.class);
+        _classes.add(BookingResource.class);
+
         _singletons.add(new NewsItemResource());
 
         _persistenceManager = PersistenceManager.instance();
