@@ -68,7 +68,6 @@ public class NewsItemResource {
     @GET
     @Path("/sub")
     @Consumes(MediaType.APPLICATION_XML)
-    @Produces(MediaType.APPLICATION_XML)
     public Response subscribe(@Suspended AsyncResponse response, @CookieParam("AuthToken") Cookie authToken) {
         EntityManager em = this.persistenceManager.createEntityManager();
         this.logger.debug("Creating sub at server");

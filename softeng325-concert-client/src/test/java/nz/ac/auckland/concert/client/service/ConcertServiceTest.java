@@ -465,6 +465,7 @@ public class ConcertServiceTest {
 
 	@Test
     public void testSubscribeNewsItem() {
+	    // All thread sleep stuff is in here to make sure objects are in the database and such!
 	    try {
             NewsItemDTO newsItemDTO = new NewsItemDTO("Bon Jovi Annouce New Concert!",
                     "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris semper hendrerit sagittis. Vivamus " +
@@ -477,12 +478,15 @@ public class ConcertServiceTest {
                 UserDTO userDTO = new UserDTO("Bulldog", "123", "Churchill", "Winston");
                 UserDTO userDTO1 = new UserDTO("SillyFace", "12345678", "Zach", "Zach");
                 _service.createUser(userDTO);
+                Thread.sleep(5000);
                 newsItemService.newsItemSub();
 
                 Thread.sleep(5000);
 
                 _service.createUser(userDTO1);
+                Thread.sleep(5000);
                 _service.authenticateUser(userDTO1);
+                Thread.sleep(5000);
                 newsItemService.newsItemSub();
 
                 Thread.sleep(5000);
@@ -508,24 +512,65 @@ public class ConcertServiceTest {
                 NewsItemDTO newsItemDTO2 = new NewsItemDTO(title2, body2, localDateTime2);
 
                 newsItemService.createNewsItem(newsItemDTO1);
+                Thread.sleep(5000);
                 assertEquals(newsItemService.getCurrentNewsItem(), newsItemDTO1);
 
                 newsItemService.createNewsItem(newsItemDTO2);
                 _logger.debug(newsItemService.getCurrentNewsItem().getTitle());
                 _logger.debug(newsItemDTO2.getTitle());
+                Thread.sleep(5000);
                 assertEquals(newsItemService.getCurrentNewsItem(), newsItemDTO2);
             } else {
                 _logger.debug("This service does not have the capability to make news items!");
                 fail();
             }
         } catch (Exception e) {
-            e.printStackTrace();
 	        fail();
         }
     }
 
     @Test
     public void testDeleteSubsription() {
+	    try {
+	        if (_service instanceof DefaultService) {
+                NewsItemService newsItemService = (NewsItemService) _service;
 
+                UserDTO userDTO = new UserDTO("Bulldog", "123", "Churchill", "Winston");
+
+                _service.createUser(userDTO);
+                newsItemService.newsItemSub();
+
+                Thread.sleep(5000);
+
+                String title = "Coil Coming To NZ!";
+                String body = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam in dignissim quam, " +
+                        "vel lobortis velit. Fusce in lacus tincidunt, mollis enim vel, vulputate eros. " +
+                        "Sed at mi dignissim, rhoncus augue non, vestibulum magna. In et auctor quam." +
+                        " Curabitur in nulla.";
+                LocalDateTime localDateTime = LocalDateTime.of(2018, 4, 10,
+                        18, 00);
+
+                NewsItemDTO newsItemDTO1 = new NewsItemDTO(title, body, localDateTime);
+
+                newsItemService.createNewsItem(newsItemDTO1);
+
+                newsItemService.cancelNewsItemSub();
+
+                String title2 = "Masters of Synth";
+                String body2 = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam in dignissim quam, " +
+                        "vel lobortis velit. Fusce in lacus tincidunt, mollis enim vel, vulputate eros. " +
+                        "Sed at mi dignissim, rhoncus augue non, vestibulum magna. In et auctor quam." +
+                        " Curabitur in nulla.";
+                LocalDateTime localDateTime2 = LocalDateTime.of(2300, 8, 11,
+                        19, 30);
+
+                assertEquals(newsItemService.getCurrentNewsItem(), newsItemDTO1);
+            } else {
+	            fail();
+            }
+        } catch (Exception e) {
+	        e.printStackTrace();
+            fail();
+        }
     }
 }
