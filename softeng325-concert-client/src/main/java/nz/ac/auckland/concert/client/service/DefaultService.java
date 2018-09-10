@@ -20,14 +20,13 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation.Builder;
-import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 
-public class DefaultService implements ConcertService, NewsItemService, PerformerSubscriptionService {
+public class DefaultService implements ConcertService, NewsItemService{
 
 
     /*** MACROS ***/
@@ -443,66 +442,6 @@ public class DefaultService implements ConcertService, NewsItemService, Performe
                 throw new ServiceException(Messages.UNAUTHENTICATED_REQUEST);
             }
             // TODO
-        } catch (Exception e) {
-            if (e instanceof ServiceException) {
-                throw e;
-            } else {
-                throw new ServiceException(Messages.SERVICE_COMMUNICATION_ERROR);
-            }
-        } finally {
-            client.close();
-        }
-    }
-
-    @Override
-    public void createPerformer(PerformerDTO performerDTO) throws ServiceException {
-        Client client = ClientBuilder.newClient();
-        Response response;
-
-        try {
-            //TODO
-        } catch (Exception e) {
-            if (e instanceof ServiceException) {
-                throw e;
-            } else {
-                throw new ServiceException(Messages.SERVICE_COMMUNICATION_ERROR);
-            }
-        } finally {
-            client.close();
-        }
-    }
-
-    @Override
-    public void cancelPerformerSub() throws ServiceException {
-        Client client = ClientBuilder.newClient();
-        Response response;
-
-        try {
-            if (_authToken == null) {
-                throw new ServiceException(Messages.UNAUTHENTICATED_REQUEST);
-            }
-            // TODO
-        } catch (Exception e) {
-            if (e instanceof ServiceException) {
-                throw e;
-            } else {
-                throw new ServiceException(Messages.SERVICE_COMMUNICATION_ERROR);
-            }
-        } finally {
-            client.close();
-        }
-    }
-
-    @Override
-    public void performerSub() throws ServiceException {
-        Client client = ClientBuilder.newClient();
-        Response response;
-
-        try {
-            if (_authToken == null) {
-                throw new ServiceException(Messages.UNAUTHENTICATED_REQUEST);
-            }
-            //TODO
         } catch (Exception e) {
             if (e instanceof ServiceException) {
                 throw e;
