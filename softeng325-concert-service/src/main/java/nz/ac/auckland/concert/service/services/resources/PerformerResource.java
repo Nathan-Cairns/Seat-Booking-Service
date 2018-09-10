@@ -7,12 +7,9 @@ import nz.ac.auckland.concert.service.mappers.PerformerMapper;
 import nz.ac.auckland.concert.service.services.PersistenceManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sun.misc.Perf;
 
 import javax.persistence.EntityManager;
 import javax.ws.rs.*;
-import javax.ws.rs.container.AsyncResponse;
-import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -21,7 +18,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Path("/performers")
-public class PerformerResource implements SubscriptionResource<PerformerDTO>{
+public class PerformerResource {
     private PersistenceManager _persistenceManager;
 
     private Logger _logger = LoggerFactory
@@ -52,7 +49,6 @@ public class PerformerResource implements SubscriptionResource<PerformerDTO>{
              em.persist(performer);
 
              em.getTransaction().commit();
-             this.process(performerDTO);
              return Response
                      .created(URI.create("/performers/" + performer.getId()))
                      .build();
@@ -122,20 +118,5 @@ public class PerformerResource implements SubscriptionResource<PerformerDTO>{
         } finally {
             em.close();
         }
-    }
-
-    @Override
-    public Response unsubscribe(Cookie authToken) {
-        return null;
-    }
-
-    @Override
-    public Response subscribe(AsyncResponse response, Cookie authToken) {
-        return null;
-    }
-
-    @Override
-    public void process(PerformerDTO performerDTO) {
-
     }
 }
