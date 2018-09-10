@@ -28,6 +28,12 @@ public class NewsItemDTO {
         this.pubDate = pubDate;
     }
 
+    public NewsItemDTO(String title, String body, LocalDateTime pubDate) {
+        this.title = title;
+        this.body = body;
+        this.pubDate = pubDate;
+    }
+
     public long getId() {
         return id;
     }

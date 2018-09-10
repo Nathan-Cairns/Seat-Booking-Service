@@ -15,11 +15,13 @@ import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.Set;
+import java.util.concurrent.Future;
 import javax.imageio.ImageIO;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
@@ -43,6 +45,7 @@ public class DefaultService implements ConcertService, NewsItemService{
     private static final String BOOKING_CONFIRMATION_SERVICE = BOOKINGS_SERVICE + "/book";
     private static final String CREDIT_CARD_SERVICE = USER_SERVICE + "/credit_card";
     private static final String NEWS_ITEM_SERVICE = WEB_SERVICE_URI + "/news_items";
+    private static final String NEWS_ITEM_SUB_SERVICE = NEWS_ITEM_SERVICE + "/sub";
 
     /* AWS */
 
@@ -399,7 +402,19 @@ public class DefaultService implements ConcertService, NewsItemService{
         Response response;
 
         try {
-            // TODO
+            Builder builder = client.target(NEWS_ITEM_SERVICE).request()
+                    .accept(MediaType.APPLICATION_XML);
+
+            _logger.debug("Create news item request ");
+
+            response = builder.post(Entity.entity(newsItemDTO, MediaType.APPLICATION_XML));
+
+            if (response.getStatus() != Response.Status.CREATED.getStatusCode()) {
+                _logger.debug(String.valueOf(response.getStatus()));
+                throw new ServiceException(response.readEntity(String.class));
+            }
+
+            _logger.debug("Created news Item " + newsItemDTO.getTitle() + " At " + response.getLocation());
         } catch (Exception e) {
             if (e instanceof ServiceException) {
                 throw e;
@@ -415,12 +430,25 @@ public class DefaultService implements ConcertService, NewsItemService{
     public void cancelNewsItemSub() throws ServiceException{
         Client client = ClientBuilder.newClient();
         Response response;
-
         try {
             if (_authToken == null) {
                 throw new ServiceException(Messages.UNAUTHENTICATED_REQUEST);
             }
-            // TODO
+
+            Builder builder = client.target(NEWS_ITEM_SUB_SERVICE).request()
+                    .accept(MediaType.APPLICATION_XML);
+
+            _logger.debug("Making create delete sub request");
+
+            response = builder
+                    .cookie("AuthToken" , _authToken.getValue())
+                    .delete();
+            if (response.getStatus() != Response.Status.OK.getStatusCode()) {
+                _logger.debug(String.valueOf(response.getStatus()));
+                throw new ServiceException(response.readEntity(String.class));
+            }
+
+            _logger.debug("Successfully removed subscription");
         } catch (Exception e) {
             if (e instanceof ServiceException) {
                 throw e;
@@ -435,13 +463,18 @@ public class DefaultService implements ConcertService, NewsItemService{
     @Override
     public void newsItemSub() throws ServiceException{
         Client client = ClientBuilder.newClient();
-        Response response;
 
         try {
             if (_authToken == null) {
                 throw new ServiceException(Messages.UNAUTHENTICATED_REQUEST);
             }
-            // TODO
+
+            WebTarget target = client.target(NEWS_ITEM_SUB_SERVICE);
+
+            Future future = target.request()
+                    .cookie("AuthToken", _authToken.getValue())
+                    .async()
+                    .get(new NewsItemCallback(target));
         } catch (Exception e) {
             if (e instanceof ServiceException) {
                 throw e;

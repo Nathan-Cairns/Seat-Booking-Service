@@ -1,10 +1,7 @@
 package nz.ac.auckland.concert.service.services;
 
-import nz.ac.auckland.concert.service.domain.CreditCard;
-import nz.ac.auckland.concert.service.domain.Reservation;
-import nz.ac.auckland.concert.service.domain.Seat;
+import nz.ac.auckland.concert.service.domain.*;
 import nz.ac.auckland.concert.service.services.resources.*;
-import nz.ac.auckland.concert.service.domain.User;
 
 import javax.persistence.EntityManager;
 import javax.ws.rs.ApplicationPath;
@@ -68,6 +65,10 @@ public class ConcertApplication extends Application {
                     .createQuery("SELECT r FROM Reservation r", Reservation.class)
                     .getResultList();
 
+            List<NewsItem> newsItems = em
+                    .createQuery("SELECT n FROM NewsItem n", NewsItem.class)
+                    .getResultList();
+
             for (User u : users) {
                 em.remove(u);
             }
@@ -82,6 +83,10 @@ public class ConcertApplication extends Application {
 
             for (Reservation r : reservations) {
                 em.remove(r);
+            }
+
+            for (NewsItem n : newsItems) {
+                em.remove(n);
             }
 
             em.flush();

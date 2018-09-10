@@ -11,14 +11,7 @@ import java.util.Set;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 
-import nz.ac.auckland.concert.common.dto.BookingDTO;
-import nz.ac.auckland.concert.common.dto.ConcertDTO;
-import nz.ac.auckland.concert.common.dto.CreditCardDTO;
-import nz.ac.auckland.concert.common.dto.PerformerDTO;
-import nz.ac.auckland.concert.common.dto.ReservationDTO;
-import nz.ac.auckland.concert.common.dto.ReservationRequestDTO;
-import nz.ac.auckland.concert.common.dto.SeatDTO;
-import nz.ac.auckland.concert.common.dto.UserDTO;
+import nz.ac.auckland.concert.common.dto.*;
 import nz.ac.auckland.concert.common.message.Messages;
 import nz.ac.auckland.concert.common.types.PriceBand;
 import nz.ac.auckland.concert.common.types.SeatRow;
@@ -447,6 +440,45 @@ public class ConcertServiceTest {
                     e.printStackTrace();
                 }
             }
+        }
+    }
+
+    @Test
+	public void testCreateNewsItem() {
+	    try {
+            NewsItemDTO newsItemDTO = new NewsItemDTO("Bon Jovi Annouce New Concert!",
+                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris semper hendrerit sagittis. Vivamus " +
+                            "vestibulum id ex eu gravida. Integer euismod.",
+                    LocalDateTime.of(2017, 2, 24, 17, 00));
+            if (_service instanceof NewsItemService) {
+                ((NewsItemService) _service).createNewsItem(newsItemDTO);
+            } else {
+                _logger.debug("This service does not have the capability to make news items!");
+                fail();
+            }
+        } catch (Exception e) {
+	        _logger.debug(e.getMessage());
+	        fail();
+        }
+	}
+
+	@Test
+    public void testSubscribeNewsItem() {
+	    try {
+            NewsItemDTO newsItemDTO = new NewsItemDTO("Bon Jovi Annouce New Concert!",
+                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris semper hendrerit sagittis. Vivamus " +
+                            "vestibulum id ex eu gravida. Integer euismod.",
+                    LocalDateTime.of(2017, 2, 24, 17, 00));
+            if (_service instanceof NewsItemService) {
+                ((NewsItemService) _service).createNewsItem(newsItemDTO);
+            } else {
+                _logger.debug("This service does not have the capability to make news items!");
+                fail();
+            }
+
+        } catch (Exception e) {
+	        _logger.debug(e.getMessage());
+	        fail();
         }
     }
 }

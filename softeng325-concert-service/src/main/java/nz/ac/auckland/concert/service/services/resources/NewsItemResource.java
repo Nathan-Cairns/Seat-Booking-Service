@@ -184,7 +184,7 @@ public class NewsItemResource implements SubscriptionResource<NewsItemDTO> {
             for (Cookie authToken : this.responseList.keySet()) {
                 this.responseList.get(authToken).resume(newsItemDTO);
 
-                User user = em.createQuery("SELECT u FROM User u WHERE u.authTokem = :authToken", User.class)
+                User user = em.createQuery("SELECT u FROM User u WHERE u.authToken = :authToken", User.class)
                         .setParameter("authToken", authToken)
                         .getSingleResult();
 

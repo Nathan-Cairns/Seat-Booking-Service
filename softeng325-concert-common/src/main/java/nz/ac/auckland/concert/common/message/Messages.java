@@ -28,5 +28,5 @@ public class Messages {
 
 	public static final String CREATE_NEWS_ITEM_ALREADY_EXISTS = "Unable to create new news item - news item with the supplied ID already exists";
 
-public static final String CREATE_PERFORMER_ALREADY_EXISTS = "Unable to create new performer - performer with the supplied ID already exists";
+    public static final String CREATE_PERFORMER_ALREADY_EXISTS = "Unable to create new performer - performer with the supplied ID already exists";
 }
