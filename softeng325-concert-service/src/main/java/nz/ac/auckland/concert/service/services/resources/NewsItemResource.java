@@ -1,6 +1,5 @@
 package nz.ac.auckland.concert.service.services.resources;
 
-import com.sun.jndi.toolkit.url.Uri;
 import nz.ac.auckland.concert.common.dto.NewsItemDTO;
 import nz.ac.auckland.concert.common.message.Messages;
 import nz.ac.auckland.concert.service.domain.NewsItem;
@@ -21,7 +20,7 @@ import java.net.URI;
 import java.util.*;
 
 @Path("/news_items")
-public class NewsItemResource implements SubscriptionResource<NewsItemDTO> {
+public class NewsItemResource {
     private Map<Cookie, AsyncResponse> responseList;
 
     private PersistenceManager persistenceManager;
@@ -55,7 +54,6 @@ public class NewsItemResource implements SubscriptionResource<NewsItemDTO> {
             em.persist(newsItem);
 
             em.getTransaction().commit();
-            this.process(newsItemDTO);
             return Response
                     .created(URI.create("/news_items/" + newsItem.getId()))
                     .build();
@@ -63,18 +61,19 @@ public class NewsItemResource implements SubscriptionResource<NewsItemDTO> {
             return Response.serverError().entity(Messages.SERVICE_COMMUNICATION_ERROR).build();
         } finally {
             em.close();
+            this.process(newsItemDTO);
         }
     }
 
-    @POST
+    @GET
     @Path("/sub")
     @Consumes(MediaType.APPLICATION_XML)
-    @Override
+    @Produces(MediaType.APPLICATION_XML)
     public Response subscribe(@Suspended AsyncResponse response, @CookieParam("AuthToken") Cookie authToken) {
         EntityManager em = this.persistenceManager.createEntityManager();
+        this.logger.debug("Creating sub at server");
 
         try {
-
             em.getTransaction().begin();
 
             // Check there is an auth token
@@ -98,6 +97,8 @@ public class NewsItemResource implements SubscriptionResource<NewsItemDTO> {
                         .build();
             }
 
+            this.logger.debug("Subscribing user " + user.getUsername());
+
             List<NewsItem> newsItems = em.createQuery("SELECT n FROM NewsItem n", NewsItem.class)
                     .getResultList();
             boolean after = false;
@@ -105,7 +106,7 @@ public class NewsItemResource implements SubscriptionResource<NewsItemDTO> {
                 if (after) {
                     response.resume(NewsItemMapper.toDTO(n));
                 }
-                if (n.getId() == user.getLastRead().getId()) {
+                if (user.getLastRead() != null && n.getId() == user.getLastRead().getId()) {
                     after = true;
                 }
             }
@@ -117,6 +118,7 @@ public class NewsItemResource implements SubscriptionResource<NewsItemDTO> {
                     .ok()
                     .build();
         } catch (Exception e) {
+            e.printStackTrace();
             return Response
                     .serverError()
                     .entity(Messages.SERVICE_COMMUNICATION_ERROR)
@@ -129,8 +131,8 @@ public class NewsItemResource implements SubscriptionResource<NewsItemDTO> {
     @DELETE
     @Path("/sub")
     @Consumes(MediaType.APPLICATION_XML)
-    @Override
-    public Response unsubscribe(@CookieParam("AuthToke") Cookie authToken) {
+    @Produces(MediaType.APPLICATION_XML)
+    public Response unsubscribe(@CookieParam("AuthToken") Cookie authToken) {
         EntityManager em = this.persistenceManager.createEntityManager();
 
         try {
@@ -157,6 +159,7 @@ public class NewsItemResource implements SubscriptionResource<NewsItemDTO> {
             }
 
             this.responseList.remove(authToken);
+            this.logger.debug("Response list has size of " + this.responseList.size());
 
             em.merge(user);
 
@@ -175,27 +178,29 @@ public class NewsItemResource implements SubscriptionResource<NewsItemDTO> {
         }
     }
 
-    @Override
     public void process(NewsItemDTO newsItemDTO) {
         EntityManager em = this.persistenceManager.createEntityManager();
+        this.logger.debug("Informing subscribers...");
+
         try {
             em.getTransaction().begin();
 
+            this.logger.debug("Response list has size of " + this.responseList.size());
             for (Cookie authToken : this.responseList.keySet()) {
                 this.responseList.get(authToken).resume(newsItemDTO);
 
                 User user = em.createQuery("SELECT u FROM User u WHERE u.authToken = :authToken", User.class)
-                        .setParameter("authToken", authToken)
+                        .setParameter("authToken", authToken.getValue())
                         .getSingleResult();
-
                 NewsItem newsItem = em.find(NewsItem.class, newsItemDTO.getId());
 
                 if (user != null) {
                     user.setLastRead(newsItem);
                     em.merge(user);
                 }
-            }
 
+                this.logger.debug("Informed user " + user.getUsername());
+            }
             em.getTransaction().commit();
         } finally {
             em.close();

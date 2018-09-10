@@ -8,6 +8,7 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import nz.ac.auckland.concert.common.dto.*;
 import nz.ac.auckland.concert.common.message.Messages;
+import nz.ac.auckland.concert.common.types.Subscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,13 +16,9 @@ import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.Set;
-import java.util.concurrent.Future;
 import javax.imageio.ImageIO;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.*;
 import javax.ws.rs.client.Invocation.Builder;
-import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
@@ -76,6 +73,7 @@ public class DefaultService implements ConcertService, NewsItemService{
     // auth token
     private Cookie _authToken;
 
+    private Subscription subscription = new Subscription();
 
     /*** FUNCTIONS ***/
 
@@ -468,21 +466,25 @@ public class DefaultService implements ConcertService, NewsItemService{
             if (_authToken == null) {
                 throw new ServiceException(Messages.UNAUTHENTICATED_REQUEST);
             }
-
+            _logger.debug("Creating new sub");
             WebTarget target = client.target(NEWS_ITEM_SUB_SERVICE);
 
-            Future future = target.request()
+            client.target(NEWS_ITEM_SUB_SERVICE)
+                    .request()
+                    .accept(MediaType.APPLICATION_XML)
                     .cookie("AuthToken", _authToken.getValue())
                     .async()
-                    .get(new NewsItemCallback(target));
+                    .get(new NewsItemCallback(target, this.subscription, this._authToken));
         } catch (Exception e) {
             if (e instanceof ServiceException) {
                 throw e;
             } else {
                 throw new ServiceException(Messages.SERVICE_COMMUNICATION_ERROR);
             }
-        } finally {
-            client.close();
         }
+    }
+
+    public NewsItemDTO getCurrentNewsItem() {
+        return this.subscription.getNewsItemDTO();
     }
 }

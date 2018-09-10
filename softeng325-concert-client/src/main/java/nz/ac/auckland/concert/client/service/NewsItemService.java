@@ -8,4 +8,6 @@ public interface NewsItemService {
     void cancelNewsItemSub() throws ServiceException;
 
     void newsItemSub() throws ServiceException;
+
+    NewsItemDTO getCurrentNewsItem() throws ServiceException;
 }

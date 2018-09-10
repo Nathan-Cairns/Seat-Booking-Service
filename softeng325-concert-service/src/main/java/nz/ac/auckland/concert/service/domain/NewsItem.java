@@ -15,11 +15,15 @@ public class NewsItem {
     @Column(name = "TITLE")
     private String title;
 
-    @Column(name = "BODY")
+    @Column(name = "BODY", length = 2000)
     private String body;
 
     @Column(name = "PUB_DATE")
     private LocalDateTime pubDate;
+
+    public NewsItem() {
+
+    }
 
     public NewsItem(String title, String body, LocalDateTime pubDate) {
         this.title = title;

@@ -1,5 +1,7 @@
 package nz.ac.auckland.concert.common.dto;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+
 import javax.xml.bind.annotation.*;
 import java.time.LocalDateTime;
 
@@ -60,5 +62,22 @@ public class NewsItemDTO {
 
     public void setPubDate(LocalDateTime pubDate) {
         this.pubDate = pubDate;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof NewsItemDTO)) {
+            return false;
+        }
+        if (obj == this) {
+            return true;
+        }
+
+        NewsItemDTO rhs = (NewsItemDTO) obj;
+        return new EqualsBuilder()
+                .append(this.title, rhs.title)
+                .append(this.body, this.body)
+                .append(this.getPubDate(), this.getPubDate())
+                .isEquals();
     }
 }

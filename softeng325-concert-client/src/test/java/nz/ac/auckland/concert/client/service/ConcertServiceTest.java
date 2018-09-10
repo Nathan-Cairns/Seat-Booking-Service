@@ -6,6 +6,7 @@ import static org.junit.Assert.fail;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.Set;
 
 import javax.ws.rs.client.Client;
@@ -470,15 +471,61 @@ public class ConcertServiceTest {
                             "vestibulum id ex eu gravida. Integer euismod.",
                     LocalDateTime.of(2017, 2, 24, 17, 00));
             if (_service instanceof NewsItemService) {
-                ((NewsItemService) _service).createNewsItem(newsItemDTO);
+                NewsItemService newsItemService = (NewsItemService) _service;
+                newsItemService.createNewsItem(newsItemDTO);
+
+                UserDTO userDTO = new UserDTO("Bulldog", "123", "Churchill", "Winston");
+                UserDTO userDTO1 = new UserDTO("SillyFace", "12345678", "Zach", "Zach");
+                _service.createUser(userDTO);
+                newsItemService.newsItemSub();
+
+                Thread.sleep(5000);
+
+                _service.createUser(userDTO1);
+                _service.authenticateUser(userDTO1);
+                newsItemService.newsItemSub();
+
+                Thread.sleep(5000);
+
+                String title = "Coil Coming To NZ!";
+                String body = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam in dignissim quam, " +
+                        "vel lobortis velit. Fusce in lacus tincidunt, mollis enim vel, vulputate eros. " +
+                        "Sed at mi dignissim, rhoncus augue non, vestibulum magna. In et auctor quam." +
+                        " Curabitur in nulla.";
+                LocalDateTime localDateTime = LocalDateTime.of(2018, 4, 10,
+                        18, 00);
+
+                NewsItemDTO newsItemDTO1 = new NewsItemDTO(title, body, localDateTime);
+
+                String title2 = "Masters of Synth";
+                String body2 = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam in dignissim quam, " +
+                        "vel lobortis velit. Fusce in lacus tincidunt, mollis enim vel, vulputate eros. " +
+                        "Sed at mi dignissim, rhoncus augue non, vestibulum magna. In et auctor quam." +
+                        " Curabitur in nulla.";
+                LocalDateTime localDateTime2 = LocalDateTime.of(2300, 8, 11,
+                        19, 30);
+
+                NewsItemDTO newsItemDTO2 = new NewsItemDTO(title2, body2, localDateTime2);
+
+                newsItemService.createNewsItem(newsItemDTO1);
+                assertEquals(newsItemService.getCurrentNewsItem(), newsItemDTO1);
+
+                newsItemService.createNewsItem(newsItemDTO2);
+                _logger.debug(newsItemService.getCurrentNewsItem().getTitle());
+                _logger.debug(newsItemDTO2.getTitle());
+                assertEquals(newsItemService.getCurrentNewsItem(), newsItemDTO2);
             } else {
                 _logger.debug("This service does not have the capability to make news items!");
                 fail();
             }
-
         } catch (Exception e) {
-	        _logger.debug(e.getMessage());
+            e.printStackTrace();
 	        fail();
         }
+    }
+
+    @Test
+    public void testDeleteSubsription() {
+
     }
 }
