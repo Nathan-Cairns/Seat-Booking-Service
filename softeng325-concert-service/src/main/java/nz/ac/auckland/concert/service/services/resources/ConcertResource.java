@@ -1,5 +1,6 @@
 package nz.ac.auckland.concert.service.services.resources;
 
+import nz.ac.auckland.concert.common.Config;
 import nz.ac.auckland.concert.common.dto.ConcertDTO;
 import nz.ac.auckland.concert.common.message.Messages;
 import nz.ac.auckland.concert.service.domain.Concert;
@@ -43,7 +44,7 @@ public class ConcertResource {
             em.getTransaction().begin();
 
             CacheControl cacheControl = new CacheControl();
-            cacheControl.setMaxAge(5);
+            cacheControl.setMaxAge(Config.CACHE_EXPIRY);
             cacheControl.setPrivate(true);
 
             List<Concert> concerts = em.createQuery("SELECT c FROM Concert c", Concert.class).getResultList();

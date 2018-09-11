@@ -293,7 +293,6 @@ public class DefaultService implements ConcertService, NewsItemService{
                     )
                     .build();
 
-
             _logger.debug("Downloading image " + imageName + " of artist " + performer.getName() + "...");
 
             // Download image
@@ -311,7 +310,6 @@ public class DefaultService implements ConcertService, NewsItemService{
             if (e instanceof ServiceException) {
                 throw e;
             } else {
-                // TODO check images can be loaded in currently getting an image to do with invalid / corrupted jpegs
                 throw new ServiceException(Messages.SERVICE_COMMUNICATION_ERROR);
             }
         }
@@ -425,11 +423,37 @@ public class DefaultService implements ConcertService, NewsItemService{
 
     @Override
     public Set<BookingDTO> getBookings() throws ServiceException {
-        Client client = ClientBuilder.newClient();
+        if (_authToken == null) {
+            throw new ServiceException(Messages.UNAUTHENTICATED_REQUEST);
+        }
+        try {
+            // Check cache
+            if (_bookingCacheExpiry == null || _bookingCache == null) {
+                _logger.debug("First time request, getting bookings");
+                // make request and set expiry
+                this.revalidateBookingCache();
+            } else if (new Date().after(_bookingCacheExpiry)) {
+                _logger.debug("Cache out of date revalidating");
+                // cache is invalidated revalidate
+                this.revalidateBookingCache();
+            }
+            _logger.debug("returning bookings");
+            return _bookingCache;
+        } catch (Exception e) {
+            if (e instanceof ServiceException) {
+                throw e;
+            } else {
+                throw new ServiceException(Messages.SERVICE_COMMUNICATION_ERROR);
+            }
+        }
+    }
+
+    private void revalidateBookingCache() throws ServiceException {
+        _logger.debug("Update booking cache");
         Response response;
+        Client client = ClientBuilder.newClient();
 
         try {
-            _logger.debug("Getting bookings...");
             Builder builder = client.target(BOOKINGS_SERVICE).request()
                     .accept(MediaType.APPLICATION_XML);
 
@@ -442,7 +466,16 @@ public class DefaultService implements ConcertService, NewsItemService{
                 throw new ServiceException(response.readEntity(String.class));
             }
 
-            return response.readEntity(new GenericType<Set<BookingDTO>>(){});
+            if (response.getHeaderString(HttpHeaders.CACHE_CONTROL) != null) {
+                // Update cache expiry
+                CacheControl cacheControl = CacheControl.valueOf(response.getHeaderString(HttpHeaders.CACHE_CONTROL));
+                Date dateRecieved = response.getDate();
+                _bookingCacheExpiry = new Date();
+                _bookingCacheExpiry.setTime(dateRecieved.getTime() + cacheControl.getMaxAge() * 1000);
+            }
+
+            // Update Cache
+            _bookingCache = response.readEntity(new GenericType<Set<BookingDTO>>() {});
         } catch (Exception e) {
             if (e instanceof ServiceException) {
                 throw e;

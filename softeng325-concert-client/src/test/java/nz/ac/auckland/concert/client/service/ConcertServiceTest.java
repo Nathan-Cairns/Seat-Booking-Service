@@ -11,6 +11,7 @@ import java.util.Set;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 
+import nz.ac.auckland.concert.common.Config;
 import nz.ac.auckland.concert.common.dto.*;
 import nz.ac.auckland.concert.common.message.Messages;
 import nz.ac.auckland.concert.common.types.PriceBand;
@@ -585,19 +586,21 @@ public class ConcertServiceTest {
             fail();
         }
     }
+
     @Test
     public void testConcertCacheRevalidate() {
 	    // This test is via visual inspection check log statements are correct.
         // Second request should revalidate cache
         try {
             _service.getConcerts();
-            Thread.sleep(5000); // expire cache
+            Thread.sleep(Config.CACHE_EXPIRY * 1000); // expire cache
             _service.getConcerts();
         } catch (Exception e) {
             _logger.debug(e.getMessage());
             fail();
         }
     }
+
     @Test
     public void testPerformerCacheRetrieve() {
 	    // This test is via visual inspection check log statements are correct.
@@ -610,14 +613,46 @@ public class ConcertServiceTest {
             fail();
         }
     }
+
     @Test
     public void testPerformerCacheRevalidate() {
 	    // This test is via visual inspection check log statements are correct.
         // Second request should revalidate cache
         try {
             _service.getPerformers();
-            Thread.sleep(5000); // expire cache
+            Thread.sleep(Config.CACHE_EXPIRY * 1000); // expire cache
             _service.getPerformers();
+        } catch (Exception e) {
+            _logger.debug(e.getMessage());
+            fail();
+        }
+    }
+
+    @Test
+    public void testBookingCacheRetrieve() {
+	    // This test is via visual inspection check log statements are correct.
+        // Second request should be retrieved from cache
+        try {
+            UserDTO userDTO = new UserDTO("Bulldog", "123", "Churchill", "Winston");
+            _service.createUser(userDTO);
+            _service.getBookings();
+            _service.getBookings();
+        } catch (Exception e) {
+            _logger.debug(e.getMessage());
+            fail();
+        }
+    }
+
+    @Test
+    public void testBookingCacheRevalidate() {
+	    // This test is via visual inspection check log statements are correct.
+        // Second request should revalidate cache
+        try {
+            UserDTO userDTO = new UserDTO("Bulldog", "123", "Churchill", "Winston");
+            _service.createUser(userDTO);
+            _service.getBookings();
+            Thread.sleep(Config.CACHE_EXPIRY * 1000); // expire cache
+            _service.getBookings();
         } catch (Exception e) {
             _logger.debug(e.getMessage());
             fail();

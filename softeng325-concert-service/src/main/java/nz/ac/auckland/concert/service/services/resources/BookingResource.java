@@ -1,5 +1,6 @@
 package nz.ac.auckland.concert.service.services.resources;
 
+import nz.ac.auckland.concert.common.Config;
 import nz.ac.auckland.concert.common.dto.BookingDTO;
 import nz.ac.auckland.concert.common.dto.ReservationDTO;
 import nz.ac.auckland.concert.common.dto.ReservationRequestDTO;
@@ -25,10 +26,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
 import javax.persistence.OptimisticLockException;
 import javax.ws.rs.*;
-import javax.ws.rs.core.Cookie;
-import javax.ws.rs.core.GenericEntity;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import javax.ws.rs.core.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -93,8 +91,13 @@ public class BookingResource {
 
             em.getTransaction().commit();
 
+            CacheControl cacheControl = new CacheControl();
+            cacheControl.setMaxAge(Config.CACHE_EXPIRY);
+            cacheControl.setPrivate(true);
+
             return Response
                     .ok(genericEntity)
+                    .cacheControl(cacheControl)
                     .build();
         } catch (Exception e) {
             return Response.serverError().entity(Messages.SERVICE_COMMUNICATION_ERROR).build();

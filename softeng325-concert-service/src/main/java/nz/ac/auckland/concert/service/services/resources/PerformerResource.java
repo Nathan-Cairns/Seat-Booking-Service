@@ -1,5 +1,6 @@
 package nz.ac.auckland.concert.service.services.resources;
 
+import nz.ac.auckland.concert.common.Config;
 import nz.ac.auckland.concert.common.dto.PerformerDTO;
 import nz.ac.auckland.concert.common.message.Messages;
 import nz.ac.auckland.concert.service.domain.Performer;
@@ -82,7 +83,7 @@ public class PerformerResource {
             };
 
             CacheControl cacheControl = new CacheControl();
-            cacheControl.setMaxAge(5);
+            cacheControl.setMaxAge(Config.CACHE_EXPIRY);
             cacheControl.setPrivate(true);
 
             _logger.debug("Successfully retrieved performers");
