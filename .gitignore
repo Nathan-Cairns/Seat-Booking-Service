@@ -87,6 +87,11 @@ atlassian-ide-plugin.xml
 # ----
 /*.log
 
+# Report
+# -------
+*.docx
+*.tmp
+
 #Files
 #------------
 *-output.dot
