@@ -18,6 +18,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.net.URI;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Path("/news_items")
 public class NewsItemResource {
@@ -29,7 +30,7 @@ public class NewsItemResource {
             LoggerFactory.getLogger(NewsItemResource.class);
 
     public NewsItemResource() {
-        this.responseList = new HashMap<>();
+        this.responseList = new ConcurrentHashMap<>();
         this.persistenceManager = PersistenceManager.instance();
     }
 
