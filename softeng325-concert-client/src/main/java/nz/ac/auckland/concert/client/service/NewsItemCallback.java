@@ -10,6 +10,9 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MediaType;
 
+/**
+ * A callback class intended to be called by an async invoker
+ */
 public class NewsItemCallback implements InvocationCallback<NewsItemDTO> {
 
     private WebTarget target;
@@ -19,6 +22,13 @@ public class NewsItemCallback implements InvocationCallback<NewsItemDTO> {
     private Logger logger = LoggerFactory
             .getLogger(NewsItemCallback.class);
 
+    /**
+     * Constructor
+     *
+     * @param target the web target to point subsequent requests at
+     * @param subscription the subscription object to update
+     * @param cookie the auth token
+     */
     public NewsItemCallback(WebTarget target, Subscription subscription, Cookie cookie) {
         this.target = target;
         this.subscription = subscription;

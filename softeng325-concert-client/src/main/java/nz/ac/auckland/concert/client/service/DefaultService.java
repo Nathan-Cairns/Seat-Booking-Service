@@ -576,6 +576,7 @@ public class DefaultService implements ConcertService, NewsItemService{
         }
     }
 
+    @Override
     public NewsItemDTO getCurrentNewsItem() {
         return _subscription.getNewsItemDTO();
     }
