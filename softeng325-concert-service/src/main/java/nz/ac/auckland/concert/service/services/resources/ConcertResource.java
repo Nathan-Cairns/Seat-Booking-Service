@@ -44,7 +44,7 @@ public class ConcertResource {
             em.getTransaction().begin();
 
             CacheControl cacheControl = new CacheControl();
-            cacheControl.setMaxAge(Config.CACHE_EXPIRY);
+            cacheControl.setMaxAge(Config.CACHE_EXPIRY_SECONDS);
             cacheControl.setPrivate(true);
 
             List<Concert> concerts = em.createQuery("SELECT c FROM Concert c", Concert.class).getResultList();

@@ -593,7 +593,7 @@ public class ConcertServiceTest {
         // Second request should revalidate cache
         try {
             _service.getConcerts();
-            Thread.sleep(Config.CACHE_EXPIRY * 1000); // expire cache
+            Thread.sleep(Config.CACHE_EXPIRY_SECONDS * 1000); // expire cache
             _service.getConcerts();
         } catch (Exception e) {
             _logger.debug(e.getMessage());
@@ -620,7 +620,7 @@ public class ConcertServiceTest {
         // Second request should revalidate cache
         try {
             _service.getPerformers();
-            Thread.sleep(Config.CACHE_EXPIRY * 1000); // expire cache
+            Thread.sleep(Config.CACHE_EXPIRY_SECONDS * 1000); // expire cache
             _service.getPerformers();
         } catch (Exception e) {
             _logger.debug(e.getMessage());
@@ -651,7 +651,7 @@ public class ConcertServiceTest {
             UserDTO userDTO = new UserDTO("Bulldog", "123", "Churchill", "Winston");
             _service.createUser(userDTO);
             _service.getBookings();
-            Thread.sleep(Config.CACHE_EXPIRY * 1000); // expire cache
+            Thread.sleep(Config.CACHE_EXPIRY_SECONDS * 1000); // expire cache
             _service.getBookings();
         } catch (Exception e) {
             _logger.debug(e.getMessage());

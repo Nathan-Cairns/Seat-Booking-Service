@@ -92,7 +92,7 @@ public class BookingResource {
             em.getTransaction().commit();
 
             CacheControl cacheControl = new CacheControl();
-            cacheControl.setMaxAge(Config.CACHE_EXPIRY);
+            cacheControl.setMaxAge(Config.CACHE_EXPIRY_SECONDS);
             cacheControl.setPrivate(true);
 
             return Response
