@@ -118,7 +118,6 @@ public class NewsItemResource {
                     .ok()
                     .build();
         } catch (Exception e) {
-            e.printStackTrace();
             return Response
                     .serverError()
                     .entity(Messages.SERVICE_COMMUNICATION_ERROR)
