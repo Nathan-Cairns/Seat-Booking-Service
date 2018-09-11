@@ -13,6 +13,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -41,6 +42,10 @@ public class ConcertResource {
 
             em.getTransaction().begin();
 
+            CacheControl cacheControl = new CacheControl();
+            cacheControl.setMaxAge(5);
+            cacheControl.setPrivate(true);
+
             List<Concert> concerts = em.createQuery("SELECT c FROM Concert c", Concert.class).getResultList();
 
             em.getTransaction().commit();
@@ -51,7 +56,7 @@ public class ConcertResource {
             };
 
             _logger.debug("Successfully retrieved all concerts");
-            return Response.ok(entity).build();
+            return Response.ok(entity).cacheControl(cacheControl).build();
         } catch (Exception e) {
             return Response.serverError().entity(Messages.SERVICE_COMMUNICATION_ERROR).build();
         } finally {

@@ -15,14 +15,14 @@ import org.slf4j.LoggerFactory;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.Date;
+import java.util.HashSet;
 import java.util.Set;
 import javax.imageio.ImageIO;
 import javax.ws.rs.client.*;
 import javax.ws.rs.client.Invocation.Builder;
-import javax.ws.rs.core.Cookie;
-import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import javax.ws.rs.core.*;
 
 
 public class DefaultService implements ConcertService, NewsItemService{
@@ -73,29 +73,63 @@ public class DefaultService implements ConcertService, NewsItemService{
     // auth token
     private Cookie _authToken;
 
-    private Subscription subscription = new Subscription();
+    private Subscription _subscription = new Subscription();
+
+    // caching
+    private Set<ConcertDTO> _concertCache = new HashSet<>();
+    private Set<PerformerDTO> _performerCache = new HashSet<>();
+    private Set<BookingDTO> _bookingCache = new HashSet<>();
+
+    private Date _concertCacheExpiry;
+    private Date _performerCacheExpiry;
+    private Date _bookingCacheExpiry;
+
 
     /*** FUNCTIONS ***/
 
 
     @Override
     public Set<ConcertDTO> getConcerts() throws ServiceException {
+        try {
+            // Check cache
+            if (_concertCacheExpiry == null || _concertCache == null) {
+                _logger.debug("First time request, getting concerts");
+                // make request and set expiry
+                this.revalidateConcertCache();
+            } else if (new Date().after(_concertCacheExpiry)) {
+                _logger.debug("Cache out of date revalidating");
+                // cache is invalidated revalidate
+                this.revalidateConcertCache();
+            }
+            return _concertCache;
+        } catch (Exception e) {
+            throw new ServiceException(Messages.SERVICE_COMMUNICATION_ERROR);
+        }
+    }
+
+    private void revalidateConcertCache() throws ServiceException {
         Response response;
         Client client = ClientBuilder.newClient();
 
         try {
             Builder builder = client.target(CONCERT_SERVICE).request()
                     .accept(MediaType.APPLICATION_XML);
-
-            _logger.debug("Making concerts get request...");
             response = builder.get();
 
             if (response.getStatus() != Response.Status.OK.getStatusCode()) {
                 throw new ServiceException(response.readEntity(String.class));
             }
 
-            _logger.debug("Successfully retrieved and unmarshalled concerts from server.");
-            return  response.readEntity(new GenericType<Set<ConcertDTO>>() {});
+            if (response.getHeaderString(HttpHeaders.CACHE_CONTROL) != null) {
+                // Update cache expiry
+                CacheControl cacheControl = CacheControl.valueOf(response.getHeaderString(HttpHeaders.CACHE_CONTROL));
+                Date dateRecieved = response.getDate();
+                _concertCacheExpiry = new Date();
+                _concertCacheExpiry.setTime(dateRecieved.getTime() + cacheControl.getMaxAge() * 1000);
+            }
+
+            // Update Cache
+            _concertCache = response.readEntity(new GenericType<Set<ConcertDTO>>() {});
         } catch (Exception e) {
             throw new ServiceException(Messages.SERVICE_COMMUNICATION_ERROR);
         } finally {
@@ -105,22 +139,46 @@ public class DefaultService implements ConcertService, NewsItemService{
 
     @Override
     public Set<PerformerDTO> getPerformers() throws ServiceException {
-        Client client = ClientBuilder.newClient();
+        try {
+            // Check cache
+            if (_performerCacheExpiry == null || _performerCache == null) {
+                _logger.debug("First time request, getting concerts");
+                // make request and set expiry
+                this.revalidatePerformerCache();
+            } else if (new Date().after(_performerCacheExpiry)) {
+                _logger.debug("Cache out of date revalidating");
+                // cache is invalidated revalidate
+                this.revalidatePerformerCache();
+            }
+            return _performerCache;
+        } catch (Exception e) {
+            throw new ServiceException(Messages.SERVICE_COMMUNICATION_ERROR);
+        }
+    }
+
+    private void revalidatePerformerCache() throws ServiceException {
         Response response;
+        Client client = ClientBuilder.newClient();
 
         try {
             Builder builder = client.target(PERFORMER_SERVICE).request()
                     .accept(MediaType.APPLICATION_XML);
-
-            _logger.debug("Making performers get request...");
             response = builder.get();
 
             if (response.getStatus() != Response.Status.OK.getStatusCode()) {
                 throw new ServiceException(response.readEntity(String.class));
             }
 
-            _logger.debug("Successfully retrieved and unmarshalled performers from server.");
-            return response.readEntity(new GenericType<Set<PerformerDTO>>() {});
+            if (response.getHeaderString(HttpHeaders.CACHE_CONTROL) != null) {
+                // Update cache expiry
+                CacheControl cacheControl = CacheControl.valueOf(response.getHeaderString(HttpHeaders.CACHE_CONTROL));
+                Date dateRecieved = response.getDate();
+                _performerCacheExpiry = new Date();
+                _performerCacheExpiry.setTime(dateRecieved.getTime() + cacheControl.getMaxAge() * 1000);
+            }
+
+            // Update Cache
+            _performerCache = response.readEntity(new GenericType<Set<PerformerDTO>>() {});
         } catch (Exception e) {
             throw new ServiceException(Messages.SERVICE_COMMUNICATION_ERROR);
         } finally {
@@ -474,7 +532,7 @@ public class DefaultService implements ConcertService, NewsItemService{
                     .accept(MediaType.APPLICATION_XML)
                     .cookie("AuthToken", _authToken.getValue())
                     .async()
-                    .get(new NewsItemCallback(target, this.subscription, this._authToken));
+                    .get(new NewsItemCallback(target, _subscription, this._authToken));
         } catch (Exception e) {
             if (e instanceof ServiceException) {
                 throw e;
@@ -485,6 +543,6 @@ public class DefaultService implements ConcertService, NewsItemService{
     }
 
     public NewsItemDTO getCurrentNewsItem() {
-        return this.subscription.getNewsItemDTO();
+        return _subscription.getNewsItemDTO();
     }
 }

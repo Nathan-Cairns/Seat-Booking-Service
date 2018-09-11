@@ -6,7 +6,6 @@ import static org.junit.Assert.fail;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.Set;
 
 import javax.ws.rs.client.Client;
@@ -570,6 +569,57 @@ public class ConcertServiceTest {
             }
         } catch (Exception e) {
 	        e.printStackTrace();
+            fail();
+        }
+    }
+
+    @Test
+    public void testConcertCacheRetrieve() {
+	    // This test is via visual inspection check log statements are correct.
+        // Second request should be retrieved from cache
+        try {
+            _service.getConcerts();
+            _service.getConcerts();
+        } catch (Exception e) {
+            _logger.debug(e.getMessage());
+            fail();
+        }
+    }
+    @Test
+    public void testConcertCacheRevalidate() {
+	    // This test is via visual inspection check log statements are correct.
+        // Second request should revalidate cache
+        try {
+            _service.getConcerts();
+            Thread.sleep(5000); // expire cache
+            _service.getConcerts();
+        } catch (Exception e) {
+            _logger.debug(e.getMessage());
+            fail();
+        }
+    }
+    @Test
+    public void testPerformerCacheRetrieve() {
+	    // This test is via visual inspection check log statements are correct.
+        // Second request should be retrieved from cache
+        try {
+            _service.getPerformers();
+            _service.getPerformers();
+        } catch (Exception e) {
+            _logger.debug(e.getMessage());
+            fail();
+        }
+    }
+    @Test
+    public void testPerformerCacheRevalidate() {
+	    // This test is via visual inspection check log statements are correct.
+        // Second request should revalidate cache
+        try {
+            _service.getPerformers();
+            Thread.sleep(5000); // expire cache
+            _service.getPerformers();
+        } catch (Exception e) {
+            _logger.debug(e.getMessage());
             fail();
         }
     }
