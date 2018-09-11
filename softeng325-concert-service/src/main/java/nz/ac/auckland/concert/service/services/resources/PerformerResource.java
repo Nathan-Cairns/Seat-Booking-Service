@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.persistence.EntityManager;
 import javax.ws.rs.*;
+import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -80,8 +81,12 @@ public class PerformerResource {
             GenericEntity<List<PerformerDTO>> entity = new GenericEntity<List<PerformerDTO>>(performerDTOs) {
             };
 
+            CacheControl cacheControl = new CacheControl();
+            cacheControl.setMaxAge(5);
+            cacheControl.setPrivate(true);
+
             _logger.debug("Successfully retrieved performers");
-            return Response.ok(entity).build();
+            return Response.ok(entity).cacheControl(cacheControl).build();
         } catch (Exception e) {
             return Response.serverError().entity(Messages.SERVICE_COMMUNICATION_ERROR).build();
         } finally {

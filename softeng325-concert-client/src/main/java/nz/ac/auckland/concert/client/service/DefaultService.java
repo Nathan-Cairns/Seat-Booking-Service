@@ -108,6 +108,7 @@ public class DefaultService implements ConcertService, NewsItemService{
     }
 
     private void revalidateConcertCache() throws ServiceException {
+        _logger.debug("Update concerts cache");
         Response response;
         Client client = ClientBuilder.newClient();
 
@@ -142,7 +143,7 @@ public class DefaultService implements ConcertService, NewsItemService{
         try {
             // Check cache
             if (_performerCacheExpiry == null || _performerCache == null) {
-                _logger.debug("First time request, getting concerts");
+                _logger.debug("First time request, getting performers");
                 // make request and set expiry
                 this.revalidatePerformerCache();
             } else if (new Date().after(_performerCacheExpiry)) {
@@ -157,6 +158,7 @@ public class DefaultService implements ConcertService, NewsItemService{
     }
 
     private void revalidatePerformerCache() throws ServiceException {
+        _logger.debug("Update performers cache");
         Response response;
         Client client = ClientBuilder.newClient();
 
