@@ -432,13 +432,22 @@ public class ConcertServiceTest {
 
         for (PerformerDTO performerDTO : performers) {
             try {
-                _service.getImageForPerformer(performerDTO);
+            	if (performerDTO.getName().equals("Twenty One Pilots")) {
+					try {
+						_service.getImageForPerformer(performerDTO);
+					} catch (Exception e) {
+					    // throws a rasta band exception
+                        // Should be seen as a service communication error to the user
+						assertEquals(e.getMessage(), Messages.SERVICE_COMMUNICATION_ERROR);
+					}
+				} else {
+					_service.getImageForPerformer(performerDTO);
+				}
             } catch (Exception e) {
                 if (e instanceof ServiceException && performerDTO == null || performerDTO.equals("")) {
                     assertEquals(e.getMessage(), Messages.NO_IMAGE_FOR_PERFORMER);
                 } else {
-                    _logger.debug(e.getMessage());
-                    e.printStackTrace();
+                    fail();
                 }
             }
         }
